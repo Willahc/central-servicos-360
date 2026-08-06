@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Correios e Envios</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="correios">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Correios e Envios (RN-COR)</h1>
+          <p class="page-subtitle">Solicitação de postagem, código de rastreamento e indicação de uso Pessoal vs. Institucional.</p>
+        </div>
+        <div>
+          <a href="solicitacao-nova.html" class="btn btn-primary">📦 Nova Postagem</a>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Descrição do Envio</th>
+              <th>Modalidade</th>
+              <th>Código Rastreamento (RN-COR-003)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="correios-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

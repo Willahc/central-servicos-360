@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Financeiro & Custos</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="financeiro">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Financeiro & Consolidação de Custos (RN-FIN)</h1>
+          <p class="page-subtitle">Consolidação por Centro de Custo e pré-carga simulada para SAP/Senior.</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código CC</th>
+              <th>Nome Centro de Custo</th>
+              <th>Gestor Responsável</th>
+              <th>Volume de Solicitações</th>
+              <th>Status Conciliação</th>
+            </tr>
+          </thead>
+          <tbody id="fin-cost-centers-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

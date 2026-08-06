@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Relatórios & BI</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="relatorios">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Relatórios & Indicadores (BI Simulado)</h1>
+          <p class="page-subtitle">Visões consolidadas de consumo, eficiência e reaproveitamento de créditos.</p>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Gasto Total Simulado</span>
+            <span class="metric-icon">💳</span>
+          </div>
+          <div class="metric-value" id="report-total-cost">-</div>
+          <div class="metric-footer">Soma das 4 frentes de serviço</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Economia por Reúso</span>
+            <span class="metric-icon">🌱</span>
+          </div>
+          <div class="metric-value" id="report-non-flown-savings" style="color: var(--status-approved);">-</div>
+          <div class="metric-footer">Créditos de bilhetes reutilizados</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2 class="chart-title">Consumo de Serviços por Área (Gráfico Derivado de Dados)</h2>
+        <div class="css-bar-chart" id="report-cost-by-area-chart">
+          <!-- Renderizado pelo app.js -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

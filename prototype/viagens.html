@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Viagens Corporativas</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="viagens">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Viagens Corporativas (RN-VIA)</h1>
+          <p class="page-subtitle">Gestão de solicitações de voos, hotéis, seguro viagem e bilhetes não voados.</p>
+        </div>
+        <div>
+          <a href="solicitacao-nova.html" class="btn btn-primary">✈️ Nova Solicitação de Viagem</a>
+        </div>
+      </div>
+
+      <!-- Alerta de Bilhetes Não Voados (RN-VIA-002) -->
+      <div style="background-color: #e0f2fe; border-left: 4px solid #0284c7; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 24px;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: #0369a1; margin-bottom: 4px;">🎫 Painel de Bilhetes Não Voados & Créditos Aéreos (RN-VIA-002)</h3>
+        <p style="font-size: 0.85rem; color: #0c4a6e;">Antes de efetuar uma nova compra, verifique o saldo de créditos de passagens canceladas reutilizáveis para evitar custos extras.</p>
+      </div>
+
+      <!-- Tabela de Créditos Disponíveis -->
+      <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Créditos de Passagens / Bilhetes Não Voados</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Crédito</th>
+              <th>Passageiro Fictício</th>
+              <th>Cia Aérea / Trecho Original</th>
+              <th>Saldo Disponível</th>
+              <th>Validade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="non-flown-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tabela de Viagens -->
+      <h2 style="font-size: 1.1rem; font-weight: 700; margin-top: 24px; margin-bottom: 12px;">Solicitações de Viagem Registradas</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título da Viagem</th>
+              <th>Itinerário Solicitado</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="viagens-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

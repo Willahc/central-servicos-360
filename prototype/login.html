@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Login Simulado</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="login" style="background-color: var(--dark-bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+  <div style="background-color: var(--surface); padding: 40px; border-radius: var(--radius-lg); max-width: 480px; width: 100%; box-shadow: var(--shadow-lg); border: 1px solid var(--border);">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">Central de Serviços 360</h1>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">Portal Interno Unificado de Serviços Operacionais</p>
+    </div>
+
+    <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; margin-bottom: 24px; border-radius: var(--radius-sm);">
+      <p style="font-size: 0.85rem; font-weight: 700; color: #b45309; margin-bottom: 4px;">⚠️ AVISO DE AUTENTICAÇÃO SIMULADA</p>
+      <p style="font-size: 0.8rem; color: #92400e;">Esta tela é apenas para demonstração do protótipo estático sem senha. Não representa a futura infraestrutura corporativa de Single Sign-On (SSO).</p>
+    </div>
+
+    <form id="form-login-simulado">
+      <div class="form-group">
+        <label for="login-role-select" class="form-label">Selecione o Perfil para Demonstração:</label>
+        <select id="login-role-select" class="form-control" style="font-weight: 600;">
+          <option value="colaborador">1. Colaborador (Solicitante)</option>
+          <option value="gestor">2. Gestor Aprovador</option>
+          <option value="viagens">3. Gestão de Viagens (William)</option>
+          <option value="faturamento">4. Faturamento e Apoio Operacional (Maria)</option>
+          <option value="coordenadora">5. Coordenadora (Renata Monteiro)</option>
+          <option value="gerencia">6. Gerência (Iramaia Rodrigues)</option>
+          <option value="financeiro">7. Financeiro</option>
+          <option value="administrador">8. Administrador</option>
+          <option value="auditoria">9. Auditoria</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 12px; font-size: 1rem;">
+        Acessar Demonstração 360 ➔
+      </button>
+    </form>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.getElementById("form-login-simulado").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const role = document.getElementById("login-role-select").value;
+      localStorage.setItem("cs360_active_role", role);
+      window.location.href = "dashboard.html";
+    });
+  </script>
+</body>
+</html>

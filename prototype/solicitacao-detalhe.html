@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Detalhes da Solicitação</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="solicitacao-detalhe">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Solicitação <span id="detail-id">SOL-2026-001</span></h1>
+          <p class="page-subtitle" id="detail-title">Participação no Congresso Nacional de Hotelaria Hospitalar</p>
+        </div>
+        <div>
+          <span class="status-badge" id="detail-status-badge">PENDENTE APROVAÇÃO</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados do Pedido</h2>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+            <div><strong>Solicitante:</strong> <span id="detail-requester">Carlos Andrade</span></div>
+            <div><strong>Centro de Custo:</strong> <span id="detail-cost-center">CC-3021</span></div>
+            <div><strong>Frente de Serviço:</strong> <span id="detail-type">VIAGEM</span></div>
+            <div><strong>Data de Abertura:</strong> <span id="detail-created">2026-08-01 10:15</span></div>
+          </div>
+        </div>
+
+        <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Histórico Auditável de Estados</h2>
+
+          <ul class="timeline" id="detail-timeline">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </ul>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

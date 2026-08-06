@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Central de Aprovações</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="aprovacoes">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Central de Aprovações (RN-GER-004)</h1>
+          <p class="page-subtitle">Deliberação sobre solicitações de subordinados (Exige justificativa na rejeição - RN-GER-005).</p>
+        </div>
+      </div>
+
+      <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin-bottom: 20px;">
+        <p style="font-size: 0.85rem; color: #92400e;">💡 <strong>Dica para a Demonstração:</strong> Alterne o perfil no cabeçalho para <strong>"Gestor Aprovador"</strong> para visualizar e interagir com a aprovação/rejeição das solicitações.</p>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Solicitante</th>
+              <th>Título / Descrição</th>
+              <th>Centro Custo</th>
+              <th>Ação Gestor</th>
+            </tr>
+          </thead>
+          <tbody id="aprovacoes-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

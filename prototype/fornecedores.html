@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Fornecedores & SLAs</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="fornecedores">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Gestão de Fornecedores & SLAs</h1>
+          <p class="page-subtitle">Acompanhamento de parceiros operacionais, vigência de contratos e metas de serviço.</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Razão Social / Parceiro</th>
+              <th>Categoria de Serviço</th>
+              <th>Contrato Vigente</th>
+              <th>Meta de SLA Acordada</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="fornecedores-tbody">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

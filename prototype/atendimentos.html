@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Atendimento & Chamados</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="atendimentos">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Central de Atendimento Humano</h1>
+          <p class="page-subtitle">Fila de chamados escalonados pelo chatbot ou abertos pelos colaboradores.</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Chamado</th>
+              <th>Assunto</th>
+              <th>Solicitante</th>
+              <th>Frente / Categoria</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="atendimentos-tbody">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

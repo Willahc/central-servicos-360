@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Detalhes do Itinerário de Viagem</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="viagem-detalhe">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Itinerário de Viagem Corporativa</h1>
+          <p class="page-subtitle">Visualização de passagens, hospedagem e apólice de seguro viagem.</p>
+        </div>
+      </div>
+
+      <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); max-width: 800px;">
+        <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 16px;">Detalhes do Trecho & Reserva</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div style="background: #f8fafc; padding: 12px; border-radius: 6px;">
+            <strong>Origem / Destino:</strong>
+            <p>São Paulo (GRU) ➔ Brasília (BSB)</p>
+          </div>
+          <div style="background: #f8fafc; padding: 12px; border-radius: 6px;">
+            <strong>Período:</strong>
+            <p>15/09/2026 a 18/09/2026</p>
+          </div>
+          <div style="background: #f8fafc; padding: 12px; border-radius: 6px;">
+            <strong>Seguro Viagem (RN-VIA-003):</strong>
+            <p style="color: green; font-weight: 600;">✓ Apólice Simulado Emitido</p>
+          </div>
+        </div>
+
+        <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin-bottom: 20px;">
+          <strong style="color: #b45309;">Aviso de MOCK (Argo / Copastur):</strong>
+          <p style="font-size: 0.85rem; color: #92400e;">Emissão realizada via adaptador simulado. Nenhuma chamada de API em produção efetuada.</p>
+        </div>
+
+        <a href="viagens.html" class="btn btn-secondary">⬅️ Voltar para Viagens</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

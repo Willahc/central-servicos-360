@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Nova Solicitação</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="solicitacao-nova">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Nova Solicitação de Serviço</h1>
+          <p class="page-subtitle">Selecione a frente desejada e preencha os dados operacionais.</p>
+        </div>
+      </div>
+
+      <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); max-width: 800px;">
+        <form id="form-nova-solicitacao">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="req-type" class="form-label">Frente de Serviço:</label>
+              <select id="req-type" class="form-control" required>
+                <option value="viagem">✈️ Viagens Corporativas</option>
+                <option value="mobilidade">🚗 Mobilidade Urbana</option>
+                <option value="correios">📦 Correios e Envios</option>
+                <option value="xerox">🖨️ Xerox e Impressões</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="req-cost-center" class="form-label">Centro de Custo (RN-GER-003):</label>
+              <select id="req-cost-center" class="form-control" required>
+                <option value="CC-3021">CC-3021 - Enfermagem Assistencial</option>
+                <option value="CC-1010">CC-1010 - Diretoria Médica</option>
+                <option value="CC-4000">CC-4000 - Infraestrutura & Supply</option>
+                <option value="CC-2005">CC-2005 - Controladoria & Finanças</option>
+                <option value="CC-5001">CC-5001 - TI</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="req-title" class="form-label">Título Sintético da Solicitação:</label>
+            <input type="text" id="req-title" class="form-control" placeholder="Ex: Viagem para Congresso Científico em Brasília" required>
+          </div>
+
+          <!-- Campos Específicos para Viagem -->
+          <div id="section-viagem-fields" style="background-color: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--primary);">Parâmetros da Viagem Corporativa</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="req-origin" class="form-label">Origem:</label>
+                <input type="text" id="req-origin" class="form-control" value="São Paulo (GRU)">
+              </div>
+              <div class="form-group">
+                <label for="req-destination" class="form-label">Destino:</label>
+                <input type="text" id="req-destination" class="form-control" value="Brasília (BSB)">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="req-dep-date" class="form-label">Data de Ida:</label>
+                <input type="date" id="req-dep-date" class="form-control" value="2026-09-20">
+              </div>
+              <div class="form-group">
+                <label for="req-ret-date" class="form-label">Data de Volta:</label>
+                <input type="date" id="req-ret-date" class="form-control" value="2026-09-23">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="req-reason" class="form-label">Motivo / Justificativa da Viagem:</label>
+              <textarea id="req-reason" class="form-control" rows="3">Apresentação de trabalho científico aprovado na plenária principal do evento.</textarea>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+            <button type="submit" class="btn btn-secondary" data-action="draft">💾 Salvar Rascunho</button>
+            <button type="submit" class="btn btn-primary" data-action="send">🚀 Enviar para Aprovação</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

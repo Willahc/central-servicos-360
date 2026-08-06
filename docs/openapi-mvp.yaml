@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: Central de Serviços 360 - API Especificação MVP
+  description: |
+    Especificação formal de design REST para a fase futura de implementação do MVP da Central de Serviços 360.
+    IMPORTANTE: Este documento é apenas uma especificação de contrato de API para desenvolvimento futuro.
+    Nenhuma destas APIs está implementada ou disponível em produção neste protótipo estático (Fase 0.5).
+  version: 0.5.0
+security:
+  - SimulatedAuth: []
+paths:
+  /api/v1/requests:
+    get:
+      summary: Listar solicitações de serviço
+      description: Retorna a lista paginada de solicitações com suporte a filtros por status e frente de serviço.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDENTE_APROVACAO, APROVADO, EM_ATENDIMENTO, CONCLUIDO, REJEITADO, RASCUNHO]
+        - name: serviceType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [viagem, mobilidade, correios, xerox]
+      responses:
+        '200':
+          description: Sucesso na consulta de solicitações.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Abertura de nova solicitação
+      description: Registra um novo pedido nas frentes de Viagens, Mobilidade, Correios ou Impressões.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequestInput'
+      responses:
+        '201':
+          description: Solicitação criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRequestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+  /api/v1/requests/{id}/approval:
+    post:
+      summary: Deliberação de Gestor Aprovador
+      description: Aprova ou rejeita uma solicitação. Exige justificativa em caso de rejeição (RN-GER-005).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalInput'
+      responses:
+        '200':
+          description: Deliberação registrada com sucesso.
+        '422':
+          description: Falha de validação de regra de negócio (ex: Justificativa ausente em rejeição).
+
+components:
+  securitySchemes:
+    SimulatedAuth:
+      type: apiKey
+      in: header
+      name: X-Simulated-Role
+      description: Autenticação totalmente simulada para protótipo estático. Não representa tokens de produção ou OAuth2/SSO real.
+  responses:
+    BadRequestError:
+      description: Parâmetros de entrada inválidos.
+    UnauthorizedError:
+      description: Autenticação necessária.
+    ForbiddenError:
+      description: Acesso negado para o perfil do usuário.
+
+  schemas:
+    RequestListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceRequestSummary'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+
+    ServiceRequestSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        serviceType:
+          type: string
+        title:
+          type: string
+        costCenter:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+
+    CreateRequestInput:
+      type: object
+      required:
+        - serviceType
+        - title
+        - costCenter
+      properties:
+        serviceType:
+          type: string
+          enum: [viagem, mobilidade, correios, xerox]
+        title:
+          type: string
+        costCenter:
+          type: string
+
+    CreateRequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+
+    ApprovalInput:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum: [APROVADO, REJEITADO]
+        rationale:
+          type: string

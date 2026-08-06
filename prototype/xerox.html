@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Xerox e Impressões</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="xerox">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Xerox e Impressões (RN-XER)</h1>
+          <p class="page-subtitle">Fila gráfica de impressão A4/A3, tiragens e acabamentos.</p>
+        </div>
+        <div>
+          <a href="solicitacao-nova.html" class="btn btn-primary">🖨️ Solicitar Impressão Gráfica</a>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Job ID</th>
+              <th>Título do Documento</th>
+              <th>Especificações Gráficas (RN-XER-001)</th>
+              <th>Status Produção</th>
+            </tr>
+          </thead>
+          <tbody id="xerox-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

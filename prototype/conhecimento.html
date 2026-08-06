@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Base de Conhecimento & Chatbot</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="conhecimento">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Base de Conhecimento & Assistente Demonstrativo</h1>
+          <p class="page-subtitle">Autoatendimento orientado estritamente em documentação oficial aprovada (RN-CHAT-001).</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+        <!-- Widget do Chatbot Determinístico -->
+        <div>
+          <div style="background-color: #e0f2fe; border-left: 4px solid #0284c7; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 0.85rem; color: #0369a1;">
+            ℹ️ <strong>Assistente demonstrativo sem IA generativa.</strong> Respostas ancoradas exclusivamente nos documentos oficiais cadastrados.
+          </div>
+
+          <div class="chat-container">
+            <div class="chat-messages" id="chat-messages-container">
+              <div class="chat-bubble bot">
+                Olá! Sou o Assistente da Central 360. Como posso ajudar com dúvidas sobre Viagens, Mobilidade, Correios ou Impressões?
+                <span class="chat-source-tag">📌 Sistema Oficial de Autoatendimento</span>
+              </div>
+            </div>
+
+            <div class="chat-input-area">
+              <input type="text" id="chat-input" class="form-control" placeholder="Digite sua pergunta (Ex: Como solicitar uma viagem?)...">
+              <button class="btn btn-primary" id="chat-btn-send">Enviar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Artigos Oficiais -->
+        <div>
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Artigos Normativos Aprovados</h2>
+
+          <div id="knowledge-articles-container" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

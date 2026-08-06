@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Redirecionamento</title>
+  <script>
+    // Direciona conforme o estado da autenticação simulada no localStorage
+    const activeRole = localStorage.getItem("cs360_active_role");
+    if (activeRole) {
+      window.location.href = "dashboard.html";
+    } else {
+      window.location.href = "login.html";
+    }
+  </script>
+</head>
+<body>
+  <p>Redirecionando para a <a href="login.html">Central de Serviços 360</a>...</p>
+</body>
+</html>

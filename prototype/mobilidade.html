@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Mobilidade Urbana</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="mobilidade">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mobilidade Urbana (RN-MOB)</h1>
+          <p class="page-subtitle">Gestão de acessos Uber for Business / Táxi e conferência de corridas.</p>
+        </div>
+        <div>
+          <a href="solicitacao-nova.html" class="btn btn-primary">🚗 Solicitar Acesso / Ajuste de Limite</a>
+        </div>
+      </div>
+
+      <!-- Tabela de Corridas Realizadas -->
+      <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Corridas Recentes & Sinalização de Política (RN-MOB-002)</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Corrida</th>
+              <th>Passageiro Fictício</th>
+              <th>Data / Hora</th>
+              <th>Origem ➔ Destino</th>
+              <th>Valor (R$)</th>
+              <th>Status de Política</th>
+            </tr>
+          </thead>
+          <tbody id="rides-tbody">
+            <!-- Renderizado pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

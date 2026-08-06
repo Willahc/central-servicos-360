@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Minhas Solicitações</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="solicitacoes">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Minhas Solicitações</h1>
+          <p class="page-subtitle">Acompanhe o histórico e o status de todos os seus pedidos de serviço.</p>
+        </div>
+        <div>
+          <a href="solicitacao-nova.html" class="btn btn-primary">➕ Abrir Novo Pedido</a>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros -->
+      <div class="filter-bar">
+        <div style="flex: 1; min-width: 200px;">
+          <label for="filter-status" class="form-label" style="margin-bottom: 2px;">Filtrar por Status:</label>
+          <select id="filter-status" class="form-control">
+            <option value="ALL">Todos os Status</option>
+            <option value="PENDENTE_APROVACAO">Pendente de Aprovação</option>
+            <option value="APROVADO">Aprovado</option>
+            <option value="EM_ATENDIMENTO">Em Atendimento</option>
+            <option value="CONCLUIDO">Concluído</option>
+            <option value="REJEITADO">Rejeitado</option>
+            <option value="RASCUNHO">Rascunho</option>
+          </select>
+        </div>
+
+        <div style="flex: 1; min-width: 200px;">
+          <label for="filter-type" class="form-label" style="margin-bottom: 2px;">Filtrar por Serviço:</label>
+          <select id="filter-type" class="form-control">
+            <option value="ALL">Todas as Frentes</option>
+            <option value="viagem">Viagens Corporativas</option>
+            <option value="mobilidade">Mobilidade Urbana</option>
+            <option value="correios">Correios e Envios</option>
+            <option value="xerox">Xerox e Impressões</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tabela de Solicitações -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Solicitação</th>
+              <th>Frente</th>
+              <th>Título / Descrição</th>
+              <th>Centro de Custo</th>
+              <th>Status Atual</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="requests-tbody">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

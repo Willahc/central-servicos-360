@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Serviços 360 - Dashboard Geral</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="dashboard">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Visão Geral 360</h1>
+          <p class="page-subtitle">Consolidação em tempo real das 4 frentes operacionais em modo MOCK.</p>
+        </div>
+        <div>
+          <a href="solicitacao-nova.html" class="btn btn-primary">➕ Nova Solicitação</a>
+        </div>
+      </div>
+
+      <!-- Métricas Principais -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Solicitações Registradas</span>
+            <span class="metric-icon">📋</span>
+          </div>
+          <div class="metric-value" id="metric-total-requests">-</div>
+          <div class="metric-footer">Total consolidado no portal</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Pendente Aprovação</span>
+            <span class="metric-icon">⏳</span>
+          </div>
+          <div class="metric-value" id="metric-pending-approvals" style="color: var(--status-pending);">-</div>
+          <div class="metric-footer">Aguardando deliberação de gestor</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Viagens Ativas</span>
+            <span class="metric-icon">✈️</span>
+          </div>
+          <div class="metric-value" id="metric-active-trips" style="color: var(--primary);">-</div>
+          <div class="metric-footer">Voos & Hotéis aprovados</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Bilhetes Não Voados</span>
+            <span class="metric-icon">🎫</span>
+          </div>
+          <div class="metric-value" id="metric-non-flown" style="color: var(--secondary);">-</div>
+          <div class="metric-footer">Créditos disponíveis para reúso</div>
+        </div>
+      </div>
+
+      <!-- Gráficos e Fila Operacional -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+        <div class="chart-card">
+          <h2 class="chart-title">Distribuição por Status (CSS Graph)</h2>
+          <div class="css-bar-chart" id="chart-status-distribution">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h2 class="chart-title">Fila Operacional Recente</h2>
+          <div class="table-container" style="box-shadow: none; border: none; margin: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Solicitante</th>
+                  <th>Status</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-queue-tbody">
+                <!-- Renderizado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -13,7 +13,12 @@
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">Portal Interno Unificado de Serviços Operacionais</p>
     </div>
 
-    <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; margin-bottom: 24px; border-radius: var(--radius-sm);">
+    <div id="api-status-banner" style="display: none; background-color: #dcfce7; border-left: 4px solid #16a34a; padding: 14px; margin-bottom: 24px; border-radius: var(--radius-sm);">
+      <p style="font-size: 0.85rem; font-weight: 700; color: #15803d; margin-bottom: 4px;">✅ CONECTADO AO SERVIDOR</p>
+      <p style="font-size: 0.8rem; color: #166534;">Autenticação via API backend ativa.</p>
+    </div>
+
+    <div id="mock-status-banner" style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; margin-bottom: 24px; border-radius: var(--radius-sm);">
       <p style="font-size: 0.85rem; font-weight: 700; color: #b45309; margin-bottom: 4px;">⚠️ AVISO DE AUTENTICAÇÃO SIMULADA</p>
       <p style="font-size: 0.8rem; color: #92400e;">Esta tela é apenas para demonstração do protótipo estático sem senha. Não representa a futura infraestrutura corporativa de Single Sign-On (SSO).</p>
     </div>
@@ -24,31 +29,86 @@
         <select id="login-role-select" class="form-control" style="font-weight: 600;">
           <option value="colaborador">1. Colaborador (Solicitante)</option>
           <option value="gestor">2. Gestor Aprovador</option>
-          <option value="viagens">3. Gestão de Viagens (William)</option>
-          <option value="faturamento">4. Faturamento e Apoio Operacional (Maria)</option>
-          <option value="coordenadora">5. Coordenadora (Renata Monteiro)</option>
-          <option value="gerencia">6. Gerência (Iramaia Rodrigues)</option>
+          <option value="viagens">3. Operador de Viagens (Simulado)</option>
+          <option value="faturamento">4. Faturamento e Apoio Operacional (Simulado)</option>
+          <option value="coordenadora">5. Coordenadora (Simulado)</option>
+          <option value="gerencia">6. Gerência (Simulado)</option>
           <option value="financeiro">7. Financeiro</option>
           <option value="administrador">8. Administrador</option>
           <option value="auditoria">9. Auditoria</option>
         </select>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 12px; font-size: 1rem;">
+      <div id="login-error" style="display: none; background-color: #fee2e2; border-left: 4px solid #dc2626; padding: 10px; margin-top: 12px; border-radius: var(--radius-sm);">
+        <p style="font-size: 0.8rem; color: #991b1b;"></p>
+      </div>
+
+      <button type="submit" id="login-btn" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 12px; font-size: 1rem;">
         Acessar Demonstração 360 ➔
       </button>
     </form>
   </div>
 
   <script src="assets/js/mock-data.js"></script>
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/api-client.js"></script>
   <script>
-    document.getElementById("form-login-simulado").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const role = document.getElementById("login-role-select").value;
-      localStorage.setItem("cs360_active_role", role);
-      window.location.href = "dashboard.html";
-    });
+    (async function() {
+      const apiBanner = document.getElementById("api-status-banner");
+      const mockBanner = document.getElementById("mock-status-banner");
+      const loginBtn = document.getElementById("login-btn");
+
+      // Verificar se a API está disponível
+      const apiUp = await CS360API.checkApiAvailability();
+      if (apiUp) {
+        apiBanner.style.display = "block";
+        mockBanner.style.display = "none";
+        loginBtn.textContent = "Entrar com API Backend ➔";
+      }
+
+      // Mapeamento role -> email mock
+      const roleEmailMap = {
+        colaborador: "carlos.andrade@ficticio.org",
+        gestor: "fernanda.lima@ficticio.org",
+        viagens: "william.nunes@ficticio.org",
+        faturamento: "maria.catarina@ficticio.org",
+        coordenadora: "renata.monteiro@ficticio.org",
+        gerencia: "iramaia.rodrigues@ficticio.org",
+        financeiro: "roberto.silva@ficticio.org",
+        administrador: "patricia.souza@ficticio.org",
+        auditoria: "marcelo.alves@ficticio.org"
+      };
+
+      document.getElementById("form-login-simulado").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const role = document.getElementById("login-role-select").value;
+        const errorDiv = document.getElementById("login-error");
+        errorDiv.style.display = "none";
+
+        if (apiUp) {
+          // Login via API
+          try {
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Conectando...";
+
+            const email = roleEmailMap[role] || roleEmailMap.colaborador;
+            const result = await CS360API.login(email);
+
+            if (result.success) {
+              window.location.href = "dashboard.html";
+            }
+          } catch (err) {
+            errorDiv.style.display = "block";
+            errorDiv.querySelector("p").textContent = "Erro ao conectar: " + err.message;
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Entrar com API Backend ➔";
+          }
+        } else {
+          // Login via localStorage (fallback)
+          localStorage.setItem("cs360_active_role", role);
+          window.location.href = "dashboard.html";
+        }
+      });
+    })();
   </script>
 </body>
 </html>

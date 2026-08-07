@@ -12,8 +12,12 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">Base de Conhecimento & Assistente Demonstrativo</h1>
-          <p class="page-subtitle">Autoatendimento orientado estritamente em documentação oficial aprovada (RN-CHAT-001).</p>
+          <p class="page-subtitle">Autoatendimento baseado em conteúdo fictício para validação do protótipo.</p>
         </div>
+      </div>
+
+      <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin-bottom: 20px;">
+        <p style="font-size: 0.85rem; color: #92400e;">⚠️ <strong>Conteúdo fictício para validação do protótipo.</strong> Não representa política ou documento institucional aprovado.</p>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
@@ -27,7 +31,7 @@
             <div class="chat-messages" id="chat-messages-container">
               <div class="chat-bubble bot">
                 Olá! Sou o Assistente da Central 360. Como posso ajudar com dúvidas sobre Viagens, Mobilidade, Correios ou Impressões?
-                <span class="chat-source-tag">📌 Sistema Oficial de Autoatendimento</span>
+                <span class="chat-source-tag">📌 Assistente Demonstrativo</span>
               </div>
             </div>
 
@@ -40,7 +44,7 @@
 
         <!-- Lista de Artigos Oficiais -->
         <div>
-          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Artigos Normativos Aprovados</h2>
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Conteúdo Normativo Demonstrativo</h2>
 
           <div id="knowledge-articles-container" style="display: flex; flex-direction: column; gap: 12px;">
             <!-- Renderizado dinamicamente pelo app.js -->
@@ -51,6 +55,7 @@
   </div>
 
   <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/api-client.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

@@ -16,72 +16,115 @@
         </div>
       </div>
 
-      <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); max-width: 800px;">
-        <form id="form-nova-solicitacao">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="req-type" class="form-label">Frente de Serviço:</label>
-              <select id="req-type" class="form-control" required>
-                <option value="viagem">✈️ Viagens Corporativas</option>
-                <option value="mobilidade">🚗 Mobilidade Urbana</option>
-                <option value="correios">📦 Correios e Envios</option>
-                <option value="xerox">🖨️ Xerox e Impressões</option>
-              </select>
-            </div>
+      <div class="form-layout-grid">
+        <!-- Coluna Principal do Formulário -->
+        <div class="form-main-col">
+          <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-xs);">
+            <form id="form-nova-solicitacao">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="req-type" class="form-label">Frente de Serviço:</label>
+                  <select id="req-type" class="form-control" required>
+                    <option value="viagem">✈️ Viagens Corporativas</option>
+                    <option value="mobilidade">🚗 Mobilidade Urbana</option>
+                    <option value="correios">📦 Correios e Envios</option>
+                    <option value="xerox">🖨️ Xerox e Impressões</option>
+                  </select>
+                </div>
 
-            <div class="form-group">
-              <label for="req-cost-center" class="form-label">Centro de Custo (RN-GER-003):</label>
-              <select id="req-cost-center" class="form-control" required>
-                <option value="CC-3021">CC-3021 - Enfermagem Assistencial</option>
-                <option value="CC-1010">CC-1010 - Diretoria Médica</option>
-                <option value="CC-4000">CC-4000 - Infraestrutura & Supply</option>
-                <option value="CC-2005">CC-2005 - Controladoria & Finanças</option>
-                <option value="CC-5001">CC-5001 - TI</option>
-              </select>
+                <div class="form-group">
+                  <label for="req-cost-center" class="form-label">Centro de Custo (Simulado):</label>
+                  <select id="req-cost-center" class="form-control" required>
+                    <option value="CC-3021">CC-3021 - Enfermagem Assistencial</option>
+                    <option value="CC-1010">CC-1010 - Diretoria Médica</option>
+                    <option value="CC-4000">CC-4000 - Infraestrutura & Supply</option>
+                    <option value="CC-2005">CC-2005 - Controladoria & Finanças</option>
+                    <option value="CC-5001">CC-5001 - TI</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="req-title" class="form-label">Título Sintético da Solicitação:</label>
+                <input type="text" id="req-title" class="form-control" placeholder="Ex: Viagem para Congresso Científico em Brasília" required>
+              </div>
+
+              <!-- Campos Específicos para Viagem -->
+              <div id="section-viagem-fields" style="background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">Parâmetros da Viagem Corporativa (Simulação)</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-origin" class="form-label">Origem:</label>
+                    <input type="text" id="req-origin" class="form-control" value="São Paulo (GRU)">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-destination" class="form-label">Destino:</label>
+                    <input type="text" id="req-destination" class="form-control" value="Brasília (BSB)">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-dep-date" class="form-label">Data de Ida:</label>
+                    <input type="date" id="req-dep-date" class="form-control" value="2026-09-20">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-ret-date" class="form-label">Data de Volta:</label>
+                    <input type="date" id="req-ret-date" class="form-control" value="2026-09-23">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-reason" class="form-label">Motivo / Justificativa:</label>
+                  <textarea id="req-reason" class="form-control" rows="3">Apresentação de trabalho científico aprovado na plenária principal do evento.</textarea>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button type="submit" class="btn btn-secondary" data-action="draft">💾 Salvar Rascunho</button>
+                <button type="submit" class="btn btn-primary" data-action="send">🚀 Enviar para Aprovação</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Coluna Lateral de Resumo e Diretrizes -->
+        <div class="form-side-col">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📋 Resumo da Solicitação</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px; font-size: var(--font-sm);">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+                <span style="color: var(--text-secondary);">Solicitante:</span>
+                <strong style="color: var(--text-primary);">Dr. Carlos Eduardo (Simulado)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+                <span style="color: var(--text-secondary);">Perfil Ativo:</span>
+                <span class="status-badge status-APROVADO">Colaborador</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+                <span style="color: var(--text-secondary);">Prazo Estimado:</span>
+                <span style="color: var(--text-primary); font-weight: 600;">24 a 48 horas (Simulado)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Alçada Necessária:</span>
+                <span style="color: var(--warning); font-weight: 600;">Gestor Imediato</span>
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="req-title" class="form-label">Título Sintético da Solicitação:</label>
-            <input type="text" id="req-title" class="form-control" placeholder="Ex: Viagem para Congresso Científico em Brasília" required>
-          </div>
-
-          <!-- Campos Específicos para Viagem -->
-          <div id="section-viagem-fields" style="background-color: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
-            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--primary);">Parâmetros da Viagem Corporativa</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="req-origin" class="form-label">Origem:</label>
-                <input type="text" id="req-origin" class="form-control" value="São Paulo (GRU)">
-              </div>
-              <div class="form-group">
-                <label for="req-destination" class="form-label">Destino:</label>
-                <input type="text" id="req-destination" class="form-control" value="Brasília (BSB)">
-              </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">💡 Diretrizes Demonstrativas</span>
             </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="req-dep-date" class="form-label">Data de Ida:</label>
-                <input type="date" id="req-dep-date" class="form-control" value="2026-09-20">
-              </div>
-              <div class="form-group">
-                <label for="req-ret-date" class="form-label">Data de Volta:</label>
-                <input type="date" id="req-ret-date" class="form-control" value="2026-09-23">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="req-reason" class="form-label">Motivo / Justificativa da Viagem:</label>
-              <textarea id="req-reason" class="form-control" rows="3">Apresentação de trabalho científico aprovado na plenária principal do evento.</textarea>
+            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6;">
+              <p style="margin-bottom: 8px;">• <strong>Antecedência Proposta:</strong> Solicitações de passagens com mínimo de 15 dias de antecedência para menor custo.</p>
+              <p style="margin-bottom: 8px;">• <strong>Prestação de Contas:</strong> Anexar comprovantes e bilhetes em até 5 dias após retorno.</p>
+              <p style="margin: 0;">• <strong>Fluxo de Aprovação:</strong> Pedidos com valor orçado passam por validação do centro de custo selecionado.</p>
             </div>
           </div>
-
-          <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-            <button type="submit" class="btn btn-secondary" data-action="draft">💾 Salvar Rascunho</button>
-            <button type="submit" class="btn btn-primary" data-action="send">🚀 Enviar para Aprovação</button>
-          </div>
-        </form>
+        </div>
       </div>
     </main>
   </div>

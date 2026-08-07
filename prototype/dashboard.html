@@ -377,111 +377,120 @@
         `).join('');
       }
 
-      // Gráfico de linha (Solicitações por dia)
-      const lineChart = document.getElementById('chart-line-requests');
-      if (lineChart && db.solicitacoesPorDia) {
-        const { days, values } = db.solicitacoesPorDia;
-        const maxVal = Math.max(...values);
-        const w = lineChart.offsetWidth || 400;
-        const h = 160;
-        const padX = 40;
-        const padY = 20;
-        const chartW = w - padX * 2;
-        const chartH = h - padY * 2;
+      function drawCharts() {
+        const currentData = (typeof getData === 'function' ? getData() : window.CS360_INITIAL_MOCK) || window.CS360_INITIAL_MOCK;
+        const db = currentData.dashboard || {};
 
-        const points = values.map((v, i) => {
-          const x = padX + (i / (values.length - 1)) * chartW;
-          const y = padY + chartH - (v / maxVal) * chartH;
-          return `${x},${y}`;
-        });
+        // Gráfico de linha (Solicitações por dia)
+        const lineChart = document.getElementById('chart-line-requests');
+        if (lineChart && db.solicitacoesPorDia) {
+          const { days, values } = db.solicitacoesPorDia;
+          const maxVal = Math.max(...values);
+          const w = lineChart.offsetWidth || 400;
+          const h = 160;
+          const padX = 40;
+          const padY = 20;
+          const chartW = w - padX * 2;
+          const chartH = h - padY * 2;
 
-        lineChart.innerHTML = `
-          <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}">
-            <defs>
-              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.2"/>
-                <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            ${[0, 0.25, 0.5, 0.75, 1].map(p => {
-              const y = padY + chartH * (1 - p);
-              const val = Math.round(maxVal * p);
-              return `<line x1="${padX}" y1="${y}" x2="${w - padX}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>
-                      <text x="${padX - 8}" y="${y + 4}" text-anchor="end" fill="#9ca3af" font-size="10">${val}</text>`;
-            }).join('')}
-            ${days.map((d, i) => {
-              const x = padX + (i / (days.length - 1)) * chartW;
-              return `<text x="${x}" y="${h - 4}" text-anchor="middle" fill="#9ca3af" font-size="10">${d}</text>`;
-            }).join('')}
-            <polygon points="${points.join(' ')} ${w - padX},${padY + chartH} ${padX},${padY + chartH}" fill="url(#lineGrad)"/>
-            <polyline points="${points.join(' ')}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            ${values.map((v, i) => {
-              const x = padX + (i / (values.length - 1)) * chartW;
-              const y = padY + chartH - (v / maxVal) * chartH;
-              return `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="#2563eb" stroke-width="2"/>`;
-            }).join('')}
-          </svg>
-        `;
-      }
+          const points = values.map((v, i) => {
+            const x = padX + (i / (values.length - 1)) * chartW;
+            const y = padY + chartH - (v / maxVal) * chartH;
+            return `${x},${y}`;
+          });
 
-      // Gráfico de barras (Gastos por categoria)
-      const barChart = document.getElementById('chart-bar-expenses');
-      if (barChart && db.gastosPorCategoria) {
-        const maxVal = Math.max(...db.gastosPorCategoria.map(c => c.value));
-        barChart.innerHTML = db.gastosPorCategoria.map(c => {
-          const pct = (c.value / maxVal) * 100;
-          return `
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-              <span style="font-size:0.75rem;color:var(--text-secondary);min-width:80px;">${c.name}</span>
-              <div style="flex:1;height:24px;background:var(--border-light);border-radius:var(--radius-sm);overflow:hidden;">
-                <div style="height:100%;width:${pct}%;background:${c.color};border-radius:var(--radius-sm);transition:width 0.3s;"></div>
+          lineChart.innerHTML = `
+            <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}">
+              <defs>
+                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2563eb" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              ${[0, 0.25, 0.5, 0.75, 1].map(p => {
+                const y = padY + chartH * (1 - p);
+                const val = Math.round(maxVal * p);
+                return `<line x1="${padX}" y1="${y}" x2="${w - padX}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+                        <text x="${padX - 8}" y="${y + 4}" text-anchor="end" fill="var(--text-muted)" font-size="10">${val}</text>`;
+              }).join('')}
+              ${days.map((d, i) => {
+                const x = padX + (i / (days.length - 1)) * chartW;
+                return `<text x="${x}" y="${h - 4}" text-anchor="middle" fill="var(--text-muted)" font-size="10">${d}</text>`;
+              }).join('')}
+              <polygon points="${points.join(' ')} ${w - padX},${padY + chartH} ${padX},${padY + chartH}" fill="url(#lineGrad)"/>
+              <polyline points="${points.join(' ')}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              ${values.map((v, i) => {
+                const x = padX + (i / (values.length - 1)) * chartW;
+                const y = padY + chartH - (v / maxVal) * chartH;
+                return `<circle cx="${x}" cy="${y}" r="3.5" fill="var(--bg-surface)" stroke="#2563eb" stroke-width="2"/>`;
+              }).join('')}
+            </svg>
+          `;
+        }
+
+        // Gráfico de barras (Gastos por categoria)
+        const barChart = document.getElementById('chart-bar-expenses');
+        if (barChart && db.gastosPorCategoria) {
+          const maxVal = Math.max(...db.gastosPorCategoria.map(c => c.value));
+          barChart.innerHTML = db.gastosPorCategoria.map(c => {
+            const pct = (c.value / maxVal) * 100;
+            return `
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="font-size:0.75rem;color:var(--text-secondary);min-width:80px;">${c.name}</span>
+                <div style="flex:1;height:24px;background:var(--border-light);border-radius:var(--radius-sm);overflow:hidden;">
+                  <div style="height:100%;width:${pct}%;background:${c.color};border-radius:var(--radius-sm);transition:width 0.3s;"></div>
+                </div>
+                <span style="font-size:0.75rem;font-weight:600;color:var(--text-primary);min-width:80px;text-align:right;">R$ ${c.value.toLocaleString('pt-BR')} <span style="font-size:0.6rem;font-weight:400;color:var(--text-muted);">${c.note || 'sim.'}</span></span>
               </div>
-              <span style="font-size:0.75rem;font-weight:600;color:var(--text-primary);min-width:80px;text-align:right;">R$ ${c.value.toLocaleString('pt-BR')} <span style="font-size:0.6rem;font-weight:400;color:var(--text-muted);">${c.note || 'sim.'}</span></span>
+            `;
+          }).join('');
+        }
+
+        // Donut chart (Status das solicitações)
+        const donutChart = document.getElementById('chart-donut-status');
+        if (donutChart && db.statusSolicitacoes) {
+          const { total, segments } = db.statusSolicitacoes;
+          let cumulative = 0;
+          const r = 60, cx = 70, cy = 70;
+
+          const paths = segments.map(s => {
+            const startAngle = (cumulative / 100) * 360;
+            cumulative += s.pct;
+            const endAngle = (cumulative / 100) * 360;
+            const startRad = (startAngle - 90) * Math.PI / 180;
+            const endRad = (endAngle - 90) * Math.PI / 180;
+            const x1 = cx + r * Math.cos(startRad);
+            const y1 = cy + r * Math.sin(startRad);
+            const x2 = cx + r * Math.cos(endRad);
+            const y2 = cy + r * Math.sin(endRad);
+            const largeArc = s.pct > 50 ? 1 : 0;
+            return `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${s.color}"/>`;
+          }).join('');
+
+          donutChart.innerHTML = `
+            <svg width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0;">
+              ${paths}
+              <circle cx="${cx}" cy="${cy}" r="35" fill="var(--bg-surface)"/>
+              <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text-primary)">${total.toLocaleString('pt-BR')}</text>
+              <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="10" fill="var(--text-muted)">Total</text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              ${segments.map(s => `
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0;"></div>
+                  <span style="font-size:0.75rem;color:var(--text-secondary);flex:1;">${s.label}</span>
+                  <span style="font-size:0.75rem;font-weight:600;color:var(--text-primary);">${s.count}</span>
+                  <span style="font-size:0.7rem;color:var(--text-muted);">${s.pct}%</span>
+                </div>
+              `).join('')}
             </div>
           `;
-        }).join('');
+        }
       }
 
-      // Donut chart (Status das solicitações)
-      const donutChart = document.getElementById('chart-donut-status');
-      if (donutChart && db.statusSolicitacoes) {
-        const { total, segments } = db.statusSolicitacoes;
-        let cumulative = 0;
-        const r = 60, cx = 70, cy = 70;
-
-        const paths = segments.map(s => {
-          const startAngle = (cumulative / 100) * 360;
-          cumulative += s.pct;
-          const endAngle = (cumulative / 100) * 360;
-          const startRad = (startAngle - 90) * Math.PI / 180;
-          const endRad = (endAngle - 90) * Math.PI / 180;
-          const x1 = cx + r * Math.cos(startRad);
-          const y1 = cy + r * Math.sin(startRad);
-          const x2 = cx + r * Math.cos(endRad);
-          const y2 = cy + r * Math.sin(endRad);
-          const largeArc = s.pct > 50 ? 1 : 0;
-          return `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${s.color}"/>`;
-        }).join('');
-
-        donutChart.innerHTML = `
-          <svg width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0;">
-            ${paths}
-            <circle cx="${cx}" cy="${cy}" r="35" fill="#fff"/>
-            <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text-primary)">${total.toLocaleString('pt-BR')}</text>
-            <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="10" fill="var(--text-muted)">Total</text>
-          </svg>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${segments.map(s => `
-              <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0;"></div>
-                <span style="font-size:0.75rem;color:var(--text-secondary);flex:1;">${s.label}</span>
-                <span style="font-size:0.75rem;font-weight:600;color:var(--text-primary);">${s.count}</span>
-                <span style="font-size:0.7rem;color:var(--text-muted);">${s.pct}%</span>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
+      drawCharts();
+      window.addEventListener('themechange', drawCharts);
+      window.addEventListener('resize', drawCharts);
     });
   </script>
   <script>

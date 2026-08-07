@@ -19,9 +19,41 @@
         </div>
       </div>
 
-      <!-- Barra de Filtros -->
-      <div class="filter-bar">
-        <div style="flex: 1; min-width: 200px;">
+      <!-- Mini KPIs Compactos Demonstrativos -->
+      <div class="kpi-mini-grid">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📑</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Total de Pedidos</span>
+            <span class="kpi-mini-val" id="kpi-total-pedidos">4</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Pendentes</span>
+            <span class="kpi-mini-val" id="kpi-pendentes-pedidos">1</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">⚙️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Atendimento</span>
+            <span class="kpi-mini-val" id="kpi-atendimento-pedidos">1</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Concluídos</span>
+            <span class="kpi-mini-val" id="kpi-concluidos-pedidos">1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros Compactos -->
+      <div class="filter-bar" style="margin-bottom: var(--spacing-lg);">
+        <div style="flex: 1; min-width: 180px;">
           <label for="filter-status" class="form-label" style="margin-bottom: 2px;">Filtrar por Status:</label>
           <select id="filter-status" class="form-control">
             <option value="ALL">Todos os Status</option>
@@ -34,7 +66,7 @@
           </select>
         </div>
 
-        <div style="flex: 1; min-width: 200px;">
+        <div style="flex: 1; min-width: 180px;">
           <label for="filter-type" class="form-label" style="margin-bottom: 2px;">Filtrar por Serviço:</label>
           <select id="filter-type" class="form-control">
             <option value="ALL">Todas as Frentes</option>
@@ -51,18 +83,22 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID Solicitação</th>
-              <th>Frente</th>
+              <th style="width: 140px;">ID Solicitação</th>
+              <th style="width: 140px;">Frente</th>
               <th>Título / Descrição</th>
-              <th>Centro de Custo</th>
-              <th>Status Atual</th>
-              <th>Ações</th>
+              <th style="width: 180px;">Centro de Custo</th>
+              <th style="width: 160px;">Status Atual</th>
+              <th style="width: 100px; text-align: right;">Ações</th>
             </tr>
           </thead>
           <tbody id="requests-tbody">
             <!-- Renderizado dinamicamente pelo app.js -->
           </tbody>
         </table>
+        <div style="padding: 10px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span>Exibindo solicitações simuladas para validação</span>
+          <span>Página 1 de 1</span>
+        </div>
       </div>
     </main>
   </div>

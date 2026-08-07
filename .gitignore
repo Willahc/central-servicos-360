@@ -35,3 +35,9 @@ prototype/*.json.bak
 # Pastas binárias não rastreadas
 Arquivos PDF/
 Imagens/
+
+# Diagnóstico e Screenshots temporários
+scratch/
+tools/
+*_1600x900*.png
+*_1366x768*.png

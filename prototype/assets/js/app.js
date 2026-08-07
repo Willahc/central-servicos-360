@@ -1,6 +1,6 @@
 /**
  * CENTRAL DE SERVIÇOS 360 - CORE APPLICATION ENGINE
- * JavaScript puro | API backend + fallback localStorage
+ * JavaScript puro | API backend + fallback localStorage | Dark Mode + Sidebar
  */
 
 (function () {
@@ -8,6 +8,8 @@
 
   const STORAGE_KEY = "cs360_data";
   const ROLE_KEY = "cs360_active_role";
+  const THEME_KEY = "cs360_theme";
+  const SIDEBAR_KEY = "cs360_sidebar_collapsed";
 
   let _authState = {
     apiAvailable: false,
@@ -16,6 +18,114 @@
     sessionRole: null,
     demoMode: true
   };
+
+  // --- 0. MOTOR DE DARK MODE & PREFERÊNCIAS ---
+  function getThemePreference() {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "dark" || saved === "light") return saved;
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+    return "light";
+  }
+
+  function applyTheme(themeName, save = false) {
+    if (save) {
+      localStorage.setItem(THEME_KEY, themeName);
+    }
+    const effective = themeName === "dark" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", effective);
+    if (document.body) {
+      document.body.setAttribute("data-theme", effective);
+    }
+
+    updateTopbarThemeToggle(effective);
+
+    try {
+      window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: effective } }));
+    } catch (e) {}
+
+    return effective;
+  }
+
+  function toggleTheme() {
+    const current = getThemePreference();
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next, true);
+    logAuditEvent("ALTERACAO_TEMA", `Tema alternado para: ${next.toUpperCase()}`);
+    return next;
+  }
+
+  function updateTopbarThemeToggle(effective) {
+    const toggleBtn = document.getElementById("topbar-theme-toggle");
+    if (!toggleBtn) return;
+
+    const isDark = effective === "dark";
+    toggleBtn.innerHTML = isDark
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+    const label = isDark ? "Ativar modo claro" : "Ativar modo escuro";
+    toggleBtn.setAttribute("title", label);
+    toggleBtn.setAttribute("aria-label", label);
+  }
+
+  // --- 0.1 MOTOR DA SIDEBAR RECOLHÍVEL & HAMBÚRGUER ---
+  function isSidebarCollapsed() {
+    return localStorage.getItem(SIDEBAR_KEY) === "true";
+  }
+
+  function applySidebarState(collapsed, save = false) {
+    if (save) {
+      localStorage.setItem(SIDEBAR_KEY, collapsed ? "true" : "false");
+    }
+    const layout = document.getElementById("app-layout-root");
+    const sidebar = document.querySelector(".app-sidebar");
+    const toggleBtn = document.getElementById("btn-sidebar-toggle");
+
+    if (layout) {
+      if (collapsed) {
+        layout.classList.add("sidebar-collapsed");
+      } else {
+        layout.classList.remove("sidebar-collapsed");
+      }
+    }
+    if (sidebar) {
+      if (collapsed) {
+        sidebar.classList.add("collapsed");
+      } else {
+        sidebar.classList.remove("collapsed");
+      }
+    }
+    if (toggleBtn) {
+      toggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+  }
+
+  function toggleSidebarCollapse() {
+    if (window.innerWidth < 1024) {
+      // Mobile Drawer Mode
+      const sidebar = document.querySelector(".app-sidebar");
+      const overlay = document.getElementById("sidebar-overlay");
+      if (sidebar) {
+        const isOpen = sidebar.classList.contains("drawer-open");
+        if (isOpen) {
+          sidebar.classList.remove("drawer-open");
+          if (overlay) overlay.classList.remove("active");
+        } else {
+          sidebar.classList.add("drawer-open");
+          if (overlay) overlay.classList.add("active");
+        }
+      }
+    } else {
+      // Desktop Collapse Mode
+      const currentlyCollapsed = isSidebarCollapsed();
+      applySidebarState(!currentlyCollapsed, true);
+    }
+  }
+
+  window.toggleSidebarCollapse = toggleSidebarCollapse;
+  window.toggleTheme = toggleTheme;
 
   // --- 1. MÉTODOS DE PERSISTÊNCIA & ESTADO ---
   function getData() {
@@ -128,6 +238,9 @@
 
   // --- 2. BOOTSTRAP DE AUTENTICAÇÃO ---
   async function initApp() {
+    // Aplicar tema salvo imediatamente
+    applyTheme(getThemePreference(), false);
+
     if (window.CS360API) {
       try {
         _authState.apiAvailable = await CS360API.checkApiAvailability();
@@ -175,20 +288,27 @@
       return;
     }
 
-    injectTopNoticeBar();
     injectAppLayout();
+    applySidebarState(isSidebarCollapsed(), false);
     await renderPageSpecificContent();
   }
 
   // --- 3. INJEÇÃO DE COMPONENTES COMPARTILHADOS ---
   document.addEventListener("DOMContentLoaded", () => {
     initApp();
-  });
 
-  function injectTopNoticeBar() {
-    // Badge de status da API movido para a topbar (injectAppLayout)
-    // Não cria mais barra horizontal separada
-  }
+    // Fechar drawer no mobile ao pressionar ESC
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const sidebar = document.querySelector(".app-sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        if (sidebar && sidebar.classList.contains("drawer-open")) {
+          sidebar.classList.remove("drawer-open");
+          if (overlay) overlay.classList.remove("active");
+        }
+      }
+    });
+  });
 
   function injectAppLayout() {
     const activePage = document.body.getAttribute("data-page") || "dashboard";
@@ -220,11 +340,12 @@
 
     const sidebar = document.createElement("aside");
     sidebar.className = "app-sidebar";
+    sidebar.id = "app-sidebar";
 
     sidebar.innerHTML = `
       <div class="sidebar-header">
         <div class="brand-title">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" style="flex-shrink:0;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           <div>
             <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);">Central 360</div>
             <div style="font-size:0.65rem;color:var(--text-muted);font-weight:400;">Central de Serviços</div>
@@ -233,19 +354,32 @@
       </div>
       <nav class="sidebar-nav">
         ${navItems.map(item => `
-          <a href="${item.href}" class="nav-link ${activePage === item.id ? 'active' : ''}">
+          <a href="${item.href}" class="nav-link ${activePage === item.id ? 'active' : ''}" data-tooltip="${item.label}">
             <span class="nav-icon">${item.icon}</span>
-            <span>${item.label}</span>
+            <span class="nav-text">${item.label}</span>
           </a>
         `).join('')}
       </nav>
       <div class="sidebar-footer">
-        <a href="#" class="nav-link" onclick="document.querySelector('.app-sidebar').classList.toggle('collapsed');return false;">
+        <a href="#" class="nav-link sidebar-collapse-link" onclick="toggleSidebarCollapse(); return false;" data-tooltip="Recolher menu lateral">
           <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg></span>
-          <span>Recolher menu</span>
+          <span class="nav-text">Recolher menu</span>
         </a>
       </div>
     `;
+
+    // Overlay Mobile
+    let overlay = document.getElementById("sidebar-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "sidebar-overlay";
+      overlay.className = "sidebar-overlay";
+      overlay.onclick = () => {
+        sidebar.classList.remove("drawer-open");
+        overlay.classList.remove("active");
+      };
+      document.body.appendChild(overlay);
+    }
 
     const mainWrapper = document.createElement("div");
     mainWrapper.className = "app-main";
@@ -257,7 +391,7 @@
 
     topbar.innerHTML = `
       <div class="topbar-left">
-        <button class="topbar-icon sidebar-toggle" onclick="document.querySelector('.app-sidebar').classList.toggle('collapsed')" aria-label="Menu">
+        <button class="topbar-icon sidebar-toggle" id="btn-sidebar-toggle" onclick="toggleSidebarCollapse()" aria-label="Alternar menu lateral" aria-controls="app-sidebar" aria-expanded="true">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
@@ -279,6 +413,9 @@
             ? '<span title="Dados locais simulados — servidor indisponível" style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--warning);background:var(--warning-bg);padding:3px 8px;border-radius:var(--radius-full);font-weight:500;cursor:default;white-space:nowrap;"><span style="width:6px;height:6px;border-radius:50%;background:var(--warning);display:inline-block;"></span>Mock offline</span>'
             : '<span title="Autenticação necessária" style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--danger);background:var(--danger-bg);padding:3px 8px;border-radius:var(--radius-full);font-weight:500;cursor:default;white-space:nowrap;"><span style="width:6px;height:6px;border-radius:50%;background:var(--danger);display:inline-block;"></span>Sem auth</span>'
         }
+        <button class="topbar-icon" id="topbar-theme-toggle" onclick="toggleTheme()" aria-label="Ativar modo escuro" title="Ativar modo escuro">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
         <button class="topbar-icon" aria-label="Notificações" style="position:relative;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span style="position:absolute;top:-2px;right:-2px;background:var(--danger);color:#fff;font-size:0.6rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">6</span>
@@ -314,6 +451,8 @@
 
     layoutContainer.appendChild(sidebar);
     layoutContainer.appendChild(mainWrapper);
+
+    updateTopbarThemeToggle(getThemePreference());
   }
 
   // --- 4. RENDERIZAÇÃO DE PÁGINAS (COM API OU LOCAL) ---

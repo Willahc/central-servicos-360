@@ -3,44 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Central de Aprovações</title>
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/secondary-pages.css">
 </head>
 <body data-page="aprovacoes">
   <div id="app-layout-root">
-    <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+    <main class="page-content approvals-page" id="page-content-slot">
+      <header class="approvals-header">
         <div>
-          <h1 class="page-title">Central de Aprovações (RN-GER-004)</h1>
-          <p class="page-subtitle">Deliberação sobre solicitações de subordinados (Exige justificativa na rejeição - RN-GER-005).</p>
+          <div class="approvals-eyebrow"><span>Ambiente demonstrativo</span></div>
+          <h1 class="page-title">Central de Aprovações</h1>
+          <p class="page-subtitle">Solicitações aguardando análise, decisão e acompanhamento.</p>
         </div>
+        <span class="approvals-role-badge" id="rbac-role-badge" aria-live="polite">Carregando perfil…</span>
+      </header>
+
+      <div class="approvals-access-note" id="aprov-rbac-callout" role="status">
+        <span class="approvals-note-icon" aria-hidden="true">i</span>
+        <p id="aprov-rbac-hint">Verificando as permissões do perfil ativo.</p>
       </div>
 
-      <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin-bottom: 20px;">
-        <p style="font-size: 0.85rem; color: #92400e;">💡 <strong>Dica para a Demonstração:</strong> Alterne o perfil no cabeçalho para <strong>"Gestor Aprovador"</strong> para visualizar e interagir com a aprovação/rejeição das solicitações.</p>
+      <section class="kpi-mini-grid grid-6-kpis approvals-kpis" aria-label="Indicadores demonstrativos">
+        <article class="kpi-mini-card"><span class="kpi-mini-icon warning" aria-hidden="true">⌛</span><div class="kpi-mini-info"><span class="kpi-mini-label">Pendentes</span><strong class="kpi-mini-val" id="kpi-aprov-pendentes">-</strong></div></article>
+        <article class="kpi-mini-card"><span class="kpi-mini-icon danger" aria-hidden="true">!</span><div class="kpi-mini-info"><span class="kpi-mini-label">Prioridade alta</span><strong class="kpi-mini-val" id="kpi-aprov-prioridade">-</strong></div></article>
+        <article class="kpi-mini-card"><span class="kpi-mini-icon accent" aria-hidden="true">◷</span><div class="kpi-mini-info"><span class="kpi-mini-label">Maior espera</span><strong class="kpi-mini-val" id="kpi-aprov-espera">-</strong></div></article>
+        <article class="kpi-mini-card"><span class="kpi-mini-icon success" aria-hidden="true">✓</span><div class="kpi-mini-info"><span class="kpi-mini-label">Aprovadas</span><strong class="kpi-mini-val" id="kpi-aprov-aprovadas">-</strong></div></article>
+        <article class="kpi-mini-card"><span class="kpi-mini-icon neutral" aria-hidden="true">×</span><div class="kpi-mini-info"><span class="kpi-mini-label">Rejeitadas</span><strong class="kpi-mini-val" id="kpi-aprov-rejeitadas">-</strong></div></article>
+        <article class="kpi-mini-card"><span class="kpi-mini-icon info" aria-hidden="true">≈</span><div class="kpi-mini-info"><span class="kpi-mini-label">Tempo médio demonstrativo</span><strong class="kpi-mini-val" id="kpi-aprov-tempo">-</strong></div></article>
+      </section>
+
+      <div class="approvals-main-grid">
+        <section class="panel approvals-queue-panel">
+          <div class="panel-header approvals-panel-header">
+            <div><h2 class="panel-title">Fila de Aprovação</h2><p class="panel-caption">Solicitações disponíveis para deliberação</p></div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" id="btn-approve-all" class="btn btn-success btn-sm" style="display: none; padding: 4px 10px; font-size: 0.75rem;">👍 Aprovar Todas as Pendências</button>
+              <span class="soft-badge" id="aprov-queue-counter">-</span>
+            </div>
+          </div>
+          <div class="approvals-filters" aria-label="Filtros da fila">
+            <label>Frente<select id="filter-aprov-frente"><option value="TODOS">Todas</option><option value="viagem">Viagens</option><option value="mobilidade">Mobilidade</option><option value="correios">Correios</option><option value="xerox">Xerox</option></select></label>
+            <label>Prioridade<select id="filter-aprov-prioridade"><option value="TODOS">Todas</option><option value="ALTA">Alta</option><option value="NORMAL">Normal</option></select></label>
+            <label>Centro de custo<select id="filter-aprov-cc"><option value="TODOS">Todos os Centros</option><option value="CC-3021">CC-3021 (UTI Geral)</option><option value="CC-1040">CC-1040 (Diretoria Médica)</option><option value="CC-2055">CC-2055 (Infraestrutura)</option><option value="CC-4010">CC-4010 (Centro Cirúrgico)</option><option value="CC-5020">CC-5020 (Oncologia)</option><option value="CC-6015">CC-6015 (Pronto Atendimento)</option><option value="CC-7080">CC-7080 (Pesquisa IEP)</option></select></label>
+          </div>
+          <div class="approvals-table-wrap">
+            <table class="data-table approvals-queue-table">
+              <colgroup><col class="col-request"><col class="col-requester"><col class="col-description"><col class="col-cost"><col class="col-wait"><col class="col-priority"><col class="col-actions"></colgroup>
+              <thead><tr><th>Solicitação</th><th>Solicitante</th><th>Descrição</th><th>Centro de custo</th><th>Espera</th><th>Prioridade</th><th class="actions-heading">Ações</th></tr></thead>
+              <tbody id="aprovacoes-tbody"></tbody>
+            </table>
+          </div>
+          <footer class="approvals-table-footer"><span id="aprovacoes-table-footer">-</span><span>Página 1 de 1</span></footer>
+        </section>
+
+        <aside class="approvals-side" aria-label="Resumo da fila">
+          <section class="panel approvals-distribution"><div class="panel-header approvals-panel-header"><div><h2 class="panel-title">Distribuição por Frente</h2><p class="panel-caption">Pendências do cenário</p></div><span class="soft-badge">Demo</span></div><div class="panel-body approvals-bars">
+            <div><p><span>Viagens</span><strong id="pend-frente-viagem">0 (0%)</strong></p><i><b id="bar-frente-viagem"></b></i></div>
+            <div><p><span>Mobilidade</span><strong id="pend-frente-mob">0 (0%)</strong></p><i><b id="bar-frente-mob"></b></i></div>
+            <div><p><span>Correios</span><strong id="pend-frente-cor">0 (0%)</strong></p><i><b id="bar-frente-cor"></b></i></div>
+            <div><p><span>Xerox</span><strong id="pend-frente-xer">0 (0%)</strong></p><i><b id="bar-frente-xer"></b></i></div>
+          </div></section>
+          <section class="panel approvals-guidance"><div class="panel-header"><h2 class="panel-title">Orientações</h2></div><div class="panel-body"><p><span>✓</span>Aprovar encaminha a solicitação para atendimento.</p><p><span>!</span>Rejeitar exige justificativa neste cenário demonstrativo.</p><small>Ref. funcional: RN-GER-005</small></div></section>
+          <section class="panel approvals-alerts"><div class="panel-header approvals-panel-header"><h2 class="panel-title">Alertas</h2><span class="count-badge" id="alert-count-badge">0</span></div><div class="panel-body" id="alerts-container"></div></section>
+        </aside>
       </div>
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Pedido</th>
-              <th>Solicitante</th>
-              <th>Título / Descrição</th>
-              <th>Centro Custo</th>
-              <th>Ação Gestor</th>
-            </tr>
-          </thead>
-          <tbody id="aprovacoes-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
-      </div>
+      <section class="panel approvals-history-panel">
+        <div class="panel-header approvals-panel-header"><div><h2 class="panel-title">Decisões Recentes</h2><p class="panel-caption">Últimas movimentações do cenário demonstrativo</p></div><span class="soft-badge">Histórico</span></div>
+        <div class="approvals-table-wrap"><table class="data-table approvals-history-table"><thead><tr><th>Solicitação</th><th>Descrição</th><th>Decisão</th><th>Responsável</th><th>Data</th></tr></thead><tbody id="aprovacoes-history-tbody"></tbody></table></div>
+      </section>
+
+      <div id="modal-reject" class="modal-backdrop approvals-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-reject-title"><div class="approvals-dialog"><header><h3 id="modal-reject-title">Rejeitar solicitação</h3><button id="btn-close-reject-modal" aria-label="Fechar modal">×</button></header><p>Informe a justificativa para rejeitar <strong id="reject-req-id">-</strong>. O preenchimento é obrigatório.</p><label for="reject-rationale-text">Justificativa</label><textarea id="reject-rationale-text" class="form-control" rows="4" placeholder="Descreva o motivo da rejeição…" required></textarea><div id="reject-error-msg" class="approvals-field-error" style="display:none">A justificativa é obrigatória.</div><footer><button id="btn-cancel-reject" class="btn btn-secondary">Cancelar</button><button id="btn-confirm-reject" class="btn btn-danger">Confirmar rejeição</button></footer></div></div>
+      <div id="modal-details" class="modal-backdrop approvals-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-details-title"><div class="approvals-dialog approvals-details-dialog"><header><h3 id="modal-details-title">Detalhes da Solicitação</h3><button id="btn-close-details-modal" aria-label="Fechar detalhes">×</button></header><div id="modal-details-content" class="approvals-details-content"></div><footer><button id="btn-close-details" class="btn btn-secondary">Fechar</button></footer></div></div>
     </main>
   </div>
-
   <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/api-client.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/secondary-pages.js"></script>
 </body>
 </html>

@@ -3,55 +3,329 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Serviços 360 - Nova Solicitação</title>
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Catálogo & Nova Solicitação</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="solicitacao-nova">
   <div id="app-layout-root">
     <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+      <!-- Breadcrumb & Top Actions -->
+      <div class="request-breadcrumb-row" style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
+          <a href="dashboard.html" style="color: var(--accent); text-decoration: none;">Dashboard</a>
+          <span>/</span>
+          <a href="solicitacoes.html" style="color: var(--accent); text-decoration: none;">Solicitações</a>
+          <span>/</span>
+          <span style="color: var(--text-primary); font-weight: 600;">Catálogo de Serviços</span>
+        </div>
         <div>
-          <h1 class="page-title">Nova Solicitação de Serviço</h1>
-          <p class="page-subtitle">Selecione a frente desejada e preencha os dados operacionais.</p>
+          <a href="solicitacoes.html" class="btn btn-secondary btn-sm">⬅️ Cancelar e Voltar</a>
         </div>
       </div>
 
-      <div class="form-layout-grid">
+      <div class="page-header" style="margin-bottom: 20px;">
+        <div>
+          <h1 class="page-title">Catálogo de Serviços</h1>
+          <p class="page-subtitle">Selecione o serviço corporativo desejado para abrir sua solicitação integrada.</p>
+        </div>
+      </div>
+
+      <!-- CATÁLOGO VISUAL DE SERVIÇOS EM 3 GRUPOS -->
+      <section class="catalog-section-wrap" aria-label="Catálogo Unificado de Serviços">
+        <!-- 1. DESLOCAMENTOS -->
+        <div style="margin-bottom: 20px;">
+          <div class="catalog-group-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+            Deslocamentos
+          </div>
+          <div class="catalog-grid">
+            <!-- Card 1: Viagens -->
+            <div class="service-card selected" data-service-card="viagem" tabindex="0" role="button" aria-label="Solicitar Viagens Corporativas">
+              <div class="service-card-head">
+                <div class="service-card-icon">✈️</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Viagens Corporativas</h3>
+                <p>Passagens aéreas, reservas de hospedagem e seguro corporativo.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 2: Mobilidade -->
+            <div class="service-card" data-service-card="mobilidade" tabindex="0" role="button" aria-label="Solicitar Mobilidade Urbana">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--success-bg);color:var(--success);">🚗</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Mobilidade Urbana</h3>
+                <p>Vouchers corporativos Uber for Business e táxi digital credenciado.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 3: Transporte Interno (Benchmark) -->
+            <div class="service-card" data-service-card="transporte" tabindex="0" role="button" aria-label="Solicitar Transporte Interno">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--info-bg);color:var(--info);">🚐</div>
+                <span class="service-card-badge" style="background:var(--surface-muted);color:var(--text-muted);border:1px dashed var(--border);">Benchmark (Pendente Validação)</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Transporte Interno</h3>
+                <p>Movimentação interna de pessoas, pacientes, materiais e equipamentos.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 4: Estacionamento -->
+            <div class="service-card" data-service-card="estacionamento" tabindex="0" role="button" aria-label="Solicitar Estacionamento">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--warning-bg);color:var(--warning);">🅿️</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Estacionamento</h3>
+                <p>Solicitação de vaga, cadastro de veículos, autorizações de visitantes e ocorrências.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. LOGÍSTICA E APOIO -->
+        <div style="margin-bottom: 20px;">
+          <div class="catalog-group-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Logística e Apoio
+          </div>
+          <div class="catalog-grid">
+            <!-- Card 5: Entregas -->
+            <div class="service-card" data-service-card="entregas" tabindex="0" role="button" aria-label="Solicitar Entregas">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--info-bg);color:var(--info);">📦</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Entregas</h3>
+                <p>Coleta, recebimento, malotes e movimentação física de itens entre unidades.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 6: Correios -->
+            <div class="service-card" data-service-card="correios" tabindex="0" role="button" aria-label="Solicitar Correios e Envios">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--accent-light);color:var(--accent);">✉️</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Correios e Envios</h3>
+                <p>Postagem e rastreamento de correspondências e encomendas via SEDEX, PAC e Carta.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 7: Xerox / Impressões -->
+            <div class="service-card" data-service-card="xerox" tabindex="0" role="button" aria-label="Solicitar Xerox e Impressões">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--warning-bg);color:var(--warning);">🖨️</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Xerox / Impressões</h3>
+                <p>Impressão de manuais, cartilhas, banners, crachás e apostilas com acabamento.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. SERVIÇOS INSTITUCIONAIS -->
+        <div style="margin-bottom: 24px;">
+          <div class="catalog-group-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Serviços Institucionais
+          </div>
+          <div class="catalog-grid">
+            <!-- Card 8: Achados e Perdidos -->
+            <div class="service-card" data-service-card="achados_perdidos" tabindex="0" role="button" aria-label="Solicitar Achados e Perdidos">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--surface-muted);color:var(--text-primary);">🔍</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Achados e Perdidos</h3>
+                <p>Registro de itens perdidos ou encontrados no complexo com custódia segura.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 9: Investigação de Ocorrência (Confirmado no Catálogo) -->
+            <div class="service-card" data-service-card="investigacao_ocorrencia" tabindex="0" role="button" aria-label="Registrar Investigação de Ocorrência">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--warning-bg);color:var(--warning);">📋</div>
+                <span class="service-card-badge" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning);">Pendente Levantamento</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Investigação de Ocorrência</h3>
+                <p>Registro e triagem de ocorrências operacionais e patrimoniais internas.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Registrar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 10: Autorizações Excepcionais -->
+            <div class="service-card" data-service-card="autorizacao_excepcional" tabindex="0" role="button" aria-label="Solicitar Autorizações Excepcionais">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--danger-bg);color:var(--danger);">🛡️</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Autorizações Excepcionais</h3>
+                <p>Exceções orçamentárias de urgência, horários especiais e contingências.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 11: Acessos (Módulo Pai: Acesso Especial & Perda de Acesso) -->
+            <div class="service-card" data-service-card="liberacao_acesso" tabindex="0" role="button" aria-label="Solicitar Liberação de Acesso">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--success-bg);color:var(--success);">🔑</div>
+                <span class="service-card-badge" style="background:var(--success-bg);color:var(--success);">Confirmado (2 Jornadas)</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Acessos & Credenciais</h3>
+                <p>Acesso especial a áreas restritas e comunicação de perda de acesso / 2ª via.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+
+            <!-- Card 12: Imagens / CFTV (Hipótese) -->
+            <div class="service-card" data-service-card="solicitacao_imagens" tabindex="0" role="button" aria-label="Solicitar Imagens e CFTV">
+              <div class="service-card-head">
+                <div class="service-card-icon" style="background:var(--info-bg);color:var(--info);">📷</div>
+                <span class="service-card-badge" style="background:var(--surface-muted);color:var(--text-muted);border:1px dashed var(--border);">Hipótese (Não Confirmado)</span>
+              </div>
+              <div class="service-card-body">
+                <h3>Solicitação de Imagens</h3>
+                <p>Gravações patrimoniais de segurança CFTV e cobertura de eventos institucionais.</p>
+              </div>
+              <div class="service-card-footer">
+                <span class="service-card-action">Solicitar agora →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FORMULÁRIO DINÂMICO UNIFICADO -->
+      <div class="form-layout-grid" id="form-scroll-target">
         <!-- Coluna Principal do Formulário -->
         <div class="form-main-col">
+          <!-- CARD DE PERFIL CORPORATIVO (CONCEITO SAP RH MOCK) -->
+          <div style="background: var(--surface-muted); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.1rem;">👤</span>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Dados do perfil corporativo — preenchimento automático demonstrativo</strong>
+              </div>
+              <span class="service-card-badge" style="background: var(--surface); color: var(--accent); border: 1px solid var(--border); font-size: 0.65rem;">🔒 Campos Protegidos (Mock SAP RH)</span>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px;">
+              <div><strong>Solicitante:</strong> Colaborador Demo (<span style="font-family:monospace;color:var(--accent);">MAT-DEMO-01</span>)</div>
+              <div><strong>Cargo:</strong> Especialista Assistencial Demonstrativo</div>
+              <div><strong>Centro de Custo:</strong> CC-DEMO-01 (Área Assistencial Demonstrativa)</div>
+              <div><strong>Gestor Imediato:</strong> Gestor Demo</div>
+            </div>
+          </div>
+
           <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-xs);">
             <form id="form-nova-solicitacao">
               <div class="form-row">
                 <div class="form-group">
-                  <label for="req-type" class="form-label">Frente de Serviço:</label>
+                  <label for="req-type" class="form-label">Frente de Serviço Selecionada:</label>
                   <select id="req-type" class="form-control" required>
-                    <option value="viagem">✈️ Viagens Corporativas</option>
-                    <option value="mobilidade">🚗 Mobilidade Urbana</option>
-                    <option value="correios">📦 Correios e Envios</option>
-                    <option value="xerox">🖨️ Xerox e Impressões</option>
+                    <optgroup label="Deslocamentos">
+                      <option value="viagem" selected>✈️ Viagens Corporativas</option>
+                      <option value="mobilidade">🚗 Mobilidade Urbana</option>
+                      <option value="transporte">🚐 Transporte Interno (Benchmark)</option>
+                      <option value="estacionamento">🅿️ Estacionamento</option>
+                    </optgroup>
+                    <optgroup label="Logística e Apoio">
+                      <option value="entregas">📦 Entregas</option>
+                      <option value="correios">✉️ Correios e Envios</option>
+                      <option value="xerox">🖨️ Xerox / Impressões</option>
+                    </optgroup>
+                    <optgroup label="Serviços Institucionais">
+                      <option value="achados_perdidos">🔍 Achados e Perdidos</option>
+                      <option value="investigacao_ocorrencia">📋 Investigação de Ocorrência (Pendente)</option>
+                      <option value="autorizacao_excepcional">🛡️ Autorizações Excepcionais</option>
+                      <option value="liberacao_acesso">🔑 Acessos & Credenciais</option>
+                      <option value="solicitacao_imagens">📷 Solicitação de Imagens (Hipótese)</option>
+                    </optgroup>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label for="req-cost-center" class="form-label">Centro de Custo (Simulado):</label>
+                  <label for="req-cost-center" class="form-label">Centro de Custo Solicitante:</label>
                   <select id="req-cost-center" class="form-control" required>
-                    <option value="CC-3021">CC-3021 - Enfermagem Assistencial</option>
-                    <option value="CC-1010">CC-1010 - Diretoria Médica</option>
-                    <option value="CC-4000">CC-4000 - Infraestrutura & Supply</option>
-                    <option value="CC-2005">CC-2005 - Controladoria & Finanças</option>
-                    <option value="CC-5001">CC-5001 - TI</option>
+                    <option value="CC-3021">CC-3021 - UTI Geral Adulto (Perfil Padrão)</option>
+                    <option value="CC-1040">CC-1040 - Diretoria Médica e Clínica</option>
+                    <option value="CC-2055">CC-2055 - Infraestrutura & Facilities</option>
+                    <option value="CC-4010">CC-4010 - Centro Cirúrgico</option>
+                    <option value="CC-5020">CC-5020 - Oncologia Clínica</option>
+                    <option value="CC-6015">CC-6015 - Pronto Atendimento</option>
+                    <option value="CC-7080">CC-7080 - Pesquisa Clínica & IEP</option>
                   </select>
                 </div>
               </div>
 
               <div class="form-group">
-                <label for="req-title" class="form-label">Título Sintético da Solicitação:</label>
+                <label for="req-title" class="form-label">Título da Solicitação:</label>
                 <input type="text" id="req-title" class="form-control" placeholder="Ex: Viagem para Congresso Científico em Brasília" required>
               </div>
 
-              <!-- Campos Específicos para Viagem -->
+              <!-- ========================================== -->
+              <!-- 1. Campos Específicos: Viagem              -->
+              <!-- ========================================== -->
               <div id="section-viagem-fields" style="background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
-                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">Parâmetros da Viagem Corporativa (Simulação)</h3>
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">✈️ Dados da Viagem Corporativa</h3>
                 <div class="form-row">
                   <div class="form-group">
                     <label for="req-origin" class="form-label">Origem:</label>
@@ -74,13 +348,569 @@
                   </div>
                 </div>
 
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-hotel-check" class="form-label">Necessita Hospedagem?</label>
+                    <select id="req-hotel-check" class="form-control">
+                      <option value="sim">Sim - Quarto Individual Standard</option>
+                      <option value="nao">Não necessita</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-insurance-check" class="form-label">Seguro Viagem (RN-VIA-003):</label>
+                    <select id="req-insurance-check" class="form-control">
+                      <option value="sim">Sim - Emitir apólice automática</option>
+                      <option value="nao">Não</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div class="form-group" style="margin-bottom: 0;">
-                  <label for="req-reason" class="form-label">Motivo / Justificativa:</label>
-                  <textarea id="req-reason" class="form-control" rows="3">Apresentação de trabalho científico aprovado na plenária principal do evento.</textarea>
+                  <label for="req-reason" class="form-label">Motivo / Justificativa da Viagem:</label>
+                  <textarea id="req-reason" class="form-control" rows="2">Apresentação de trabalho científico aprovado na plenária principal do evento.</textarea>
                 </div>
               </div>
 
-              <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+              <!-- ========================================== -->
+              <!-- 2. Campos Específicos: Mobilidade          -->
+              <!-- ========================================== -->
+              <div id="section-mobilidade-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">🚗 Dados da Mobilidade Corporativa</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-mob-provider" class="form-label">Serviço de Transporte:</label>
+                    <select id="req-mob-provider" class="form-control">
+                      <option value="uber">Uber for Business</option>
+                      <option value="taxi">Táxi Digital Convencional</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-mob-city" class="form-label">Cidade / Região:</label>
+                    <input type="text" id="req-mob-city" class="form-control" value="São Paulo / SP">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-mob-origin" class="form-label">Origem do Deslocamento:</label>
+                    <input type="text" id="req-mob-origin" class="form-control" placeholder="Ex: Hospital Sírio-Libanês (Bela Vista)">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-mob-dest" class="form-label">Destino do Deslocamento:</label>
+                    <input type="text" id="req-mob-dest" class="form-control" placeholder="Ex: Unidade Itaim / Aeroporto Congonhas">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-mob-reason" class="form-label">Justificativa Operacional / Horário (RN-MOB-002):</label>
+                  <textarea id="req-mob-reason" class="form-control" rows="2" placeholder="Deslocamento a serviço / plantão noturno autorizado."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 3. Campos Específicos: Transporte Interno  -->
+              <!-- ========================================== -->
+              <div id="section-transporte-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--accent);">🚐 Dados do Transporte Interno</h3>
+                  <span class="badge-demo">Identificado no Benchmark — Pendente Validação</span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-trp-type" class="form-label">Tipo de Movimentação:</label>
+                    <select id="req-trp-type" class="form-control">
+                      <option value="Pessoa">Pessoa (Paciente monitorado / Colaborador)</option>
+                      <option value="Material">Material / Insumo Assistencial</option>
+                      <option value="Equipamento">Equipamento Médico / Hospitalar</option>
+                      <option value="Outro">Outra movimentação interna</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-trp-priority" class="form-label">Prioridade Operacional:</label>
+                    <select id="req-trp-priority" class="form-control">
+                      <option value="Normal">Normal (Até 60 min)</option>
+                      <option value="Alta">Alta (Até 30 min)</option>
+                      <option value="Urgente">Urgente / Crítico (Imediato)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-trp-origin" class="form-label">Origem (Bloco / Andar / Setor):</label>
+                    <input type="text" id="req-trp-origin" class="form-control" placeholder="Ex: UTI Geral Adulto - Bloco A (3º Andar)">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-trp-destination" class="form-label">Destino (Bloco / Andar / Setor):</label>
+                    <input type="text" id="req-trp-destination" class="form-control" placeholder="Ex: Centro Cirúrgico - Bloco B (2º Andar)">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-trp-date" class="form-label">Data Desejada:</label>
+                    <input type="date" id="req-trp-date" class="form-control" value="2026-08-08">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-trp-time" class="form-label">Horário Desejado:</label>
+                    <input type="time" id="req-trp-time" class="form-control" value="10:00">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-trp-notes" class="form-label">Descrição e Requisitos Especiais:</label>
+                  <textarea id="req-trp-notes" class="form-control" rows="2" placeholder="Ex: Necessita maca com suporte duplo de soro e oxigênio portátil."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 4. Campos Específicos: Estacionamento     -->
+              <!-- ========================================== -->
+              <div id="section-estacionamento-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">🅿️ Dados de Estacionamento & Veículos</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-est-type" class="form-label">Tipo de Solicitação:</label>
+                    <select id="req-est-type" class="form-control">
+                      <option value="Solicitação de vaga">Solicitação de vaga</option>
+                      <option value="Cadastro/alteração de veículo">Cadastro / alteração de veículo</option>
+                      <option value="Autorização temporária">Autorização temporária</option>
+                      <option value="Visitante">Visitante / Convidado</option>
+                      <option value="Ocorrência">Registro de ocorrência</option>
+                      <option value="Outra solicitação">Outra solicitação</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-est-location" class="form-label">Unidade / Garagem:</label>
+                    <select id="req-est-location" class="form-control">
+                      <option value="Edifício Garagem Bela Vista - VIP / Docentes">Edifício Garagem Bela Vista - VIP / Docentes</option>
+                      <option value="Garagem Subsolo 1 - Funcionários">Garagem Subsolo 1 - Funcionários</option>
+                      <option value="Garagem Médica Bloco B">Garagem Médica Bloco B</option>
+                      <option value="Doca de Carga e Descarga">Doca de Carga e Descarga</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-est-plate" class="form-label">Placa do Veículo (Simulado):</label>
+                    <input type="text" id="req-est-plate" class="form-control" placeholder="Ex: ABC-4E88">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-est-model" class="form-label">Modelo / Cor:</label>
+                    <input type="text" id="req-est-model" class="form-control" placeholder="Ex: Corolla Prata / Compass Branco">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-est-period-start" class="form-label">Período / Data Início:</label>
+                    <input type="text" id="req-est-period-start" class="form-control" placeholder="Ex: 12/08/2026 07:30 ou Vigência Anual">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-est-period-end" class="form-label">Período / Data Fim:</label>
+                    <input type="text" id="req-est-period-end" class="form-control" placeholder="Ex: 12/08/2026 18:00">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-est-justification" class="form-label">Justificativa & Observações:</label>
+                  <textarea id="req-est-justification" class="form-control" rows="2" placeholder="Informe a justificativa institucional do acesso ao estacionamento."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 5. Campos Específicos: Entregas   -->
+              <!-- ========================================== -->
+              <div id="section-entregas-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">📦 Dados de Entregas & Volumes</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-ent-type" class="form-label">Tipo de Movimentação:</label>
+                    <select id="req-ent-type" class="form-control">
+                      <option value="Malote">Malote lacrado</option>
+                      <option value="Coleta">Coleta de documentos / prontuários</option>
+                      <option value="Entrega">Entrega direta de insumos</option>
+                      <option value="Recebimento">Recebimento de mercadoria</option>
+                      <option value="Outro">Outro tipo</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-ent-priority" class="form-label">Prioridade de Entrega:</label>
+                    <select id="req-ent-priority" class="form-control">
+                      <option value="Normal">Normal (Próxima rota programada)</option>
+                      <option value="Alta">Alta (Até 1 hora)</option>
+                      <option value="Urgente">Urgente (Imediato com protocolo)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-ent-origin" class="form-label">Origem (Setor / Bloco / Andar):</label>
+                    <input type="text" id="req-ent-origin" class="form-control" placeholder="Ex: Farmácia Central (1º Subsolo)">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-ent-dest" class="form-label">Destino (Setor / Bloco / Andar):</label>
+                    <input type="text" id="req-ent-dest" class="form-control" placeholder="Ex: Farmácia Satélite UTI - Bloco A (3º Andar)">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-ent-sender" class="form-label">Responsável Remetente:</label>
+                    <input type="text" id="req-ent-sender" class="form-control" placeholder="Nome do remetente e ramal">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-ent-recipient" class="form-label">Responsável Destinatário:</label>
+                    <input type="text" id="req-ent-recipient" class="form-control" placeholder="Nome do destinatário e ramal">
+                  </div>
+                </div>
+
+                <!-- Dados de Volume & Carga (Conforme Requisitos HOOBOX) -->
+                <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;">
+                  <div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);margin-bottom:8px;">📦 Dados de Volume e Carga</div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="req-ent-dimensions" class="form-label">Dimensões (A x L x C em cm):</label>
+                      <input type="text" id="req-ent-dimensions" class="form-control" placeholder="Ex: 30 x 20 x 15 cm">
+                    </div>
+                    <div class="form-group">
+                      <label for="req-ent-weight" class="form-label">Peso Estimado (kg):</label>
+                      <input type="text" id="req-ent-weight" class="form-control" placeholder="Ex: 2.5 kg">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="req-ent-volumes" class="form-label">Qtd. de Volumes:</label>
+                      <input type="number" id="req-ent-volumes" class="form-control" value="1" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                      <label for="req-ent-declared-value" class="form-label">Valor Declarado (R$):</label>
+                      <input type="text" id="req-ent-declared-value" class="form-control" placeholder="Ex: 450,00">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-ent-desc" class="form-label">Descrição Detalhada do Conteúdo & Requisitos de Custódia:</label>
+                  <textarea id="req-ent-desc" class="form-control" rows="2" placeholder="Ex: Malote lacrado com medicamentos especiais / caixas de prontuários com termo."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 6. Campos Específicos: Correios            -->
+              <!-- ========================================== -->
+              <div id="section-correios-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">✉️ Dados de Postagem e Envios (Correios)</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-cor-mode" class="form-label">Modalidade de Envio:</label>
+                    <select id="req-cor-mode" class="form-control">
+                      <option value="SEDEX">SEDEX Convencional (Urgência Normal)</option>
+                      <option value="SEDEX_10">SEDEX 10 (Exige Justificativa RN-COR-001)</option>
+                      <option value="PAC">PAC Econômico</option>
+                      <option value="CARTA">Carta Registrada / Malote Externo</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-cor-recipient" class="form-label">Destinatário (Pessoa / Órgão):</label>
+                    <input type="text" id="req-cor-recipient" class="form-control" placeholder="Ex: Secretaria Estadual de Saúde - Protocolo">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-cor-cep" class="form-label">CEP de Destino:</label>
+                    <input type="text" id="req-cor-cep" class="form-control" placeholder="01308-050">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-cor-address" class="form-label">Endereço Completo:</label>
+                    <input type="text" id="req-cor-address" class="form-control" placeholder="Rua, Número, Bairro, Cidade - UF">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-cor-content" class="form-label">Descrição do Conteúdo / Documentos:</label>
+                  <textarea id="req-cor-content" class="form-control" rows="2" placeholder="Ex: Laudos médicos / Contrato original para assinatura."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 7. Campos Específicos: Xerox / Gráfica     -->
+              <!-- ========================================== -->
+              <div id="section-xerox-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">🖨️ Dados de Xerox e Impressão Gráfica</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-xer-format" class="form-label">Formato do Documento:</label>
+                    <select id="req-xer-format" class="form-control">
+                      <option value="A4">A4 Padrão (210 x 297 mm)</option>
+                      <option value="A5">A5 Caderno / Cartilha (148 x 210 mm)</option>
+                      <option value="A3">A3 Gráfico (297 x 420 mm)</option>
+                      <option value="BANNER">Cartaz / Banner em Lona</option>
+                      <option value="CRACHA">Etiquetas / Crachá</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-xer-copies" class="form-label">Quantidade de Cópias / Tiragem:</label>
+                    <input type="number" id="req-xer-copies" class="form-control" value="50" min="1" max="10000">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-xer-color" class="form-label">Tipo de Impressão:</label>
+                    <select id="req-xer-color" class="form-control">
+                      <option value="COLOR">Colorida Frente e Verso</option>
+                      <option value="PB">Preto e Branco Frente e Verso</option>
+                      <option value="COLOR_FRENTE">Colorida Só Frente</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-xer-finish" class="form-label">Acabamento Gráfico:</label>
+                    <select id="req-xer-finish" class="form-control">
+                      <option value="GRAMPO">Grampeado no Canto Superior</option>
+                      <option value="ESPIRAL">Encadernação com Espiral e Capa</option>
+                      <option value="DOBRA">Dobra em Tríptico / Folder</option>
+                      <option value="SEM">Sem Acabamento Adicional</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-xer-notes" class="form-label">Instruções Especiais / Local de Entrega:</label>
+                  <textarea id="req-xer-notes" class="form-control" rows="2" placeholder="Ex: Entregar no 4º andar da Torre A - Centro de Estudos."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 8. Campos Específicos: Achados e Perdidos -->
+              <!-- ========================================== -->
+              <div id="section-achados_perdidos-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">🔍 Registro de Achados e Perdidos</h3>
+                
+                <div style="margin-bottom: 14px;">
+                  <label class="form-label">Jornada da Ocorrência:</label>
+                  <div class="journey-toggle-bar">
+                    <button type="button" class="journey-toggle-btn active" id="btn-journey-found" onclick="switchLostFoundJourney('ENCONTREI_ITEM')">🟢 Encontrei um Item</button>
+                    <button type="button" class="journey-toggle-btn" id="btn-journey-lost" onclick="switchLostFoundJourney('PERDI_ITEM')">🔵 Perdi um Item</button>
+                  </div>
+                  <input type="hidden" id="req-ach-occurrence-type" value="ENCONTREI_ITEM">
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-ach-category" class="form-label">Categoria do Objeto:</label>
+                    <select id="req-ach-category" class="form-control">
+                      <option value="Documentos/Crachás">Documentos / Crachás / Cartões</option>
+                      <option value="Eletrônicos">Eletrônicos (Celular, Fones, Carregador)</option>
+                      <option value="Óculos">Óculos de Grau / Escuros</option>
+                      <option value="Chaves">Chaves / Chaveiros</option>
+                      <option value="Vestuário/Acessórios">Vestuário / Casacos / Bolsas</option>
+                      <option value="Outros">Outros Objetos</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-ach-location" class="form-label">Local Aproximado:</label>
+                    <input type="text" id="req-ach-location" class="form-control" placeholder="Ex: Sala de Espera Bloco B / Auditório IEP">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-ach-datetime" class="form-label">Data e Hora Aproximada:</label>
+                    <input type="text" id="req-ach-datetime" class="form-control" value="Hoje por volta das 10:30">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-ach-contact" class="form-label">Contato do Solicitante / Ramal:</label>
+                    <input type="text" id="req-ach-contact" class="form-control" placeholder="Ex: Ramal 3021 / carlos.andrade@hospital-demo.org">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-ach-details" class="form-label">Descrição Detalhada e Características Distintivas:</label>
+                  <textarea id="req-ach-details" class="form-control" rows="2" placeholder="Cor, marca, estojo, detalhes gravados, estado de conservação..."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 9. Campos Específicos: Investigação Ocorrência (NOVO GAP) -->
+              <!-- ========================================== -->
+              <div id="section-investigacao_ocorrencia-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); border-left: 4px solid var(--warning); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--warning);">📋 Investigação de Ocorrência</h3>
+                  <span class="badge-demo">Status: Pendente Levantamento</span>
+                </div>
+
+                <div class="notice-box-demo" style="margin-bottom: 14px; background: var(--surface);">
+                  <span>⚠️</span>
+                  <div><strong>Campos e Procedimento Pendentes de Levantamento:</strong> Esta frente foi confirmada no catálogo da HOOBOX, porém os campos específicos internos aguardam screenshot da tela de formulário de origem. Exibindo estrutura demonstrativa mínima.</div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-oco-category" class="form-label">Categoria da Ocorrência (Provisória):</label>
+                    <select id="req-oco-category" class="form-control">
+                      <option value="Patrimonial / Operacional">Patrimonial / Operacional</option>
+                      <option value="Acesso / Segurança">Acesso / Segurança</option>
+                      <option value="Processual / Outra">Processual / Outra</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-oco-location" class="form-label">Local do Fato / Setor:</label>
+                    <input type="text" id="req-oco-location" class="form-control" placeholder="Ex: UTI Geral Adulto - Leito 14">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-oco-datetime" class="form-label">Data e Hora Aproximada:</label>
+                    <input type="text" id="req-oco-datetime" class="form-control" placeholder="Ex: 08/08/2026 às 08:30">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-oco-people" class="form-label">Envolvidos / Testemunhas (se houver):</label>
+                    <input type="text" id="req-oco-people" class="form-control" placeholder="Ex: Equipe de plantão do turno da manhã">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-oco-desc" class="form-label">Relato Resumido dos Fatos:</label>
+                  <textarea id="req-oco-desc" class="form-control" rows="2" placeholder="Descreva brevemente o ocorrido para triagem preliminar."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 10. Campos Específicos: Autorizações Excepc.-->
+              <!-- ========================================== -->
+              <div id="section-autorizacao_excepcional-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--accent);">🛡️ Solicitação de Autorização Excepcional</h3>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-exc-category" class="form-label">Categoria da Exceção:</label>
+                    <select id="req-exc-category" class="form-control">
+                      <option value="Orçamentária / Custo">Orçamentária / Custo Emergencial</option>
+                      <option value="Operacional / Horário">Operacional / Horário Extraordinário Especial</option>
+                      <option value="Recurso Especial">Uso de Recurso Especial / Espaço</option>
+                      <option value="Procedimento de Contingência">Procedimento de Contingência</option>
+                      <option value="Outra">Outra Excepcionalidade</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-exc-validity" class="form-label">Vigência / Período da Exceção:</label>
+                    <input type="text" id="req-exc-validity" class="form-control" placeholder="Ex: 10/08 a 12/08/2026 (das 22h às 05h)">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="req-exc-reason" class="form-label">Motivo da Exceção:</label>
+                  <input type="text" id="req-exc-reason" class="form-control" placeholder="Ex: Aquisição em regime de urgência de peça crítica de tomógrafo">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-exc-justification" class="form-label">Justificativa Detalhada & Impacto Previsto:</label>
+                  <textarea id="req-exc-justification" class="form-control" rows="2" placeholder="Detalhe a razão da excepcionalidade e o impacto operacional/financeiro estimado."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 11. Campos Específicos: Acessos (Módulo Pai) -->
+              <!-- ========================================== -->
+              <div id="section-liberacao_acesso-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--accent);">🔑 Acessos & Credenciais</h3>
+                  <span class="badge-demo">Módulo Pai Unificado</span>
+                </div>
+
+                <!-- Seletor de Jornada de Acesso -->
+                <div style="margin-bottom: 14px;">
+                  <label class="form-label">Jornada de Acesso Selecionada:</label>
+                  <div class="journey-toggle-bar">
+                    <button type="button" class="journey-toggle-btn active" id="btn-acs-journey-especial" onclick="switchAcessoJourney('ACESSO_ESPECIAL')">🔑 Acesso Especial</button>
+                    <button type="button" class="journey-toggle-btn" id="btn-acs-journey-perda" onclick="switchAcessoJourney('PERDA_ACESSO')">🪪 Perda de Acesso / 2ª Via</button>
+                  </div>
+                  <input type="hidden" id="req-acs-journey-type" value="ACESSO_ESPECIAL">
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-acs-type" class="form-label">Tipo de Requisição:</label>
+                    <select id="req-acs-type" class="form-control">
+                      <option value="Solicitar acesso especial">Solicitar acesso especial a área restrita</option>
+                      <option value="Acesso temporário (auditor/consultor)">Acesso temporário (auditor / consultor / terceiro)</option>
+                      <option value="Recuperar / liberar acesso">Recuperar / liberar acesso bloqueado</option>
+                      <option value="Comunicar perda de acesso">Comunicar perda de credencial / crachá</option>
+                      <option value="Revogação">Revogação de acesso</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-acs-resource" class="form-label">Recurso / Local / Sistema:</label>
+                    <input type="text" id="req-acs-resource" class="form-control" placeholder="Ex: Sala Segura TI / Catracas Centro Cirúrgico / CME">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-acs-user" class="form-label">Usuário Titular (Perfil SAP RH):</label>
+                    <input type="text" id="req-acs-user" class="form-control" value="Carlos Andrade (MAT-884210)">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-acs-period" class="form-label">Período de Vigência Desejado:</label>
+                    <input type="text" id="req-acs-period" class="form-control" placeholder="Ex: 15/08/2026 a 19/08/2026 ou Permanente">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-acs-justification" class="form-label">Justificativa Institucional:</label>
+                  <textarea id="req-acs-justification" class="form-control" rows="2" placeholder="Motivo pelo qual o acesso deve ser concedido ou 2ª via emitida."></textarea>
+                </div>
+              </div>
+
+              <!-- ========================================== -->
+              <!-- 12. Campos Específicos: Imagens (Hipótese) -->
+              <!-- ========================================== -->
+              <div id="section-solicitacao_imagens-fields" style="display: none; background-color: var(--surface-muted); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--accent);">📷 Solicitação de Imagens & CFTV</h3>
+                  <span class="badge-demo">Hipótese / Benchmark Não Confirmado</span>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-img-type" class="form-label">Tipo de Solicitação:</label>
+                    <select id="req-img-type" class="form-control">
+                      <option value="CFTV / Segurança Patrimonial">CFTV / Segurança Patrimonial</option>
+                      <option value="Registro Institucional de Evento">Registro Institucional de Evento</option>
+                      <option value="Auditoria de Acesso">Auditoria de Acesso / Passagem</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="req-img-sector" class="form-label">Unidade / Setor / Câmeras:</label>
+                    <input type="text" id="req-img-sector" class="form-control" placeholder="Ex: Edifício Garagem - Subsolo 2 (Corredor D)">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="req-img-period" class="form-label">Período / Intervalo de Referência:</label>
+                    <input type="text" id="req-img-period" class="form-control" placeholder="Ex: 07/08/2026 das 14:00 às 17:30">
+                  </div>
+                  <div class="form-group">
+                    <label for="req-img-purpose" class="form-label">Finalidade Demonstrativa:</label>
+                    <input type="text" id="req-img-purpose" class="form-control" placeholder="Ex: Apuração de incidente patrimonial / Registro de evento">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="req-img-justification" class="form-label">Justificativa Formal Obrigatória:</label>
+                  <textarea id="req-img-justification" class="form-control" rows="2" placeholder="Descreva os fatos e motivos institucionais que fundamentam a requisição."></textarea>
+                </div>
+              </div>
+
+              <!-- Botões de Ação -->
+              <div class="form-actions" style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;align-items:center;">
+                <a href="solicitacoes.html" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-secondary" data-action="draft">💾 Salvar Rascunho</button>
                 <button type="submit" class="btn btn-primary" data-action="send">🚀 Enviar para Aprovação</button>
               </div>
@@ -97,31 +927,36 @@
             <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px; font-size: var(--font-sm);">
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
                 <span style="color: var(--text-secondary);">Solicitante:</span>
-                <strong style="color: var(--text-primary);">Dr. Carlos Eduardo (Simulado)</strong>
+                <strong style="color: var(--text-primary);" id="form-summary-requester">Carlos Andrade (MAT-884210)</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
-                <span style="color: var(--text-secondary);">Perfil Ativo:</span>
-                <span class="status-badge status-APROVADO">Colaborador</span>
+                <span style="color: var(--text-secondary);">Frente Ativa:</span>
+                <strong style="color: var(--accent); text-transform: capitalize;" id="form-summary-type">Viagens Corporativas</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
-                <span style="color: var(--text-secondary);">Prazo Estimado:</span>
-                <span style="color: var(--text-primary); font-weight: 600;">24 a 48 horas (Simulado)</span>
+                <span style="color: var(--text-secondary);">Prazo Demonstrativo:</span>
+                <span style="color: var(--text-primary); font-weight: 600;" id="form-summary-sla">24 a 48 horas</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+                <span style="color: var(--text-secondary);">Alçada de Aprovação:</span>
+                <span style="color: var(--warning); font-weight: 600;" id="form-summary-approval">Gestor Imediato (RN-GER-004)</span>
               </div>
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--text-secondary);">Alçada Necessária:</span>
-                <span style="color: var(--warning); font-weight: 600;">Gestor Imediato</span>
+                <span style="color: var(--text-secondary);">Status de Paridade:</span>
+                <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600;" id="form-summary-parity">Implementado no molde</span>
               </div>
             </div>
           </div>
 
           <div class="panel">
             <div class="panel-header">
-              <span class="panel-title">💡 Diretrizes Demonstrativas</span>
+              <span class="panel-title">💡 Diretrizes & Políticas</span>
             </div>
-            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6;">
-              <p style="margin-bottom: 8px;">• <strong>Antecedência Proposta:</strong> Solicitações de passagens com mínimo de 15 dias de antecedência para menor custo.</p>
-              <p style="margin-bottom: 8px;">• <strong>Prestação de Contas:</strong> Anexar comprovantes e bilhetes em até 5 dias após retorno.</p>
-              <p style="margin: 0;">• <strong>Fluxo de Aprovação:</strong> Pedidos com valor orçado passam por validação do centro de custo selecionado.</p>
+            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;" id="form-guidelines-box">
+              <p style="margin: 0;">• <strong>Viagens (RN-VIA-001):</strong> Menor tarifa disponível com antecedência recomendada.</p>
+              <p style="margin: 0;">• <strong>Mobilidade (RN-MOB-002):</strong> Corridas fora de horário regular requerem justificativa formal.</p>
+              <p style="margin: 0;">• <strong>Acessos (Módulo Pai):</strong> Jornadas dedicadas de Acesso Especial e Perda de Acesso.</p>
+              <p style="margin: 0;">• <strong>Investigação de Ocorrência:</strong> Campos pendentes de levantamento no sistema atual.</p>
             </div>
           </div>
         </div>
@@ -131,6 +966,40 @@
 
   <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/api-client.js"></script>
+  <script src="assets/js/request-form-schema.js"></script>
   <script src="assets/js/app.js"></script>
+  <script>
+    function switchLostFoundJourney(type) {
+      const btnFound = document.getElementById('btn-journey-found');
+      const btnLost = document.getElementById('btn-journey-lost');
+      const inputType = document.getElementById('req-ach-occurrence-type');
+      if (inputType) inputType.value = type;
+      if (type === 'ENCONTREI_ITEM') {
+        btnFound?.classList.add('active');
+        btnLost?.classList.remove('active');
+      } else {
+        btnLost?.classList.add('active');
+        btnFound?.classList.remove('active');
+      }
+    }
+
+    function switchAcessoJourney(journey) {
+      const btnEsp = document.getElementById('btn-acs-journey-especial');
+      const btnPerd = document.getElementById('btn-acs-journey-perda');
+      const inputJourney = document.getElementById('req-acs-journey-type');
+      const typeSelect = document.getElementById('req-acs-type');
+
+      if (inputJourney) inputJourney.value = journey;
+      if (journey === 'ACESSO_ESPECIAL') {
+        btnEsp?.classList.add('active');
+        btnPerd?.classList.remove('active');
+        if (typeSelect) typeSelect.value = 'Solicitar acesso especial';
+      } else {
+        btnPerd?.classList.add('active');
+        btnEsp?.classList.remove('active');
+        if (typeSelect) typeSelect.value = 'Comunicar perda de acesso';
+      }
+    }
+  </script>
 </body>
 </html>

@@ -10,29 +10,81 @@ const router = Router();
 const mockTickets = [
   {
     id: 'TICK-101',
-    title: 'Dúvida sobre franquia de bagagem adicional',
-    requester: 'Carlos Andrade',
+    title: 'Dúvida sobre franquia de bagagem demonstrativa',
+    requester: 'Solicitante Exemplo A',
     category: 'Viagens',
     status: 'EM_ABERTO',
     priority: 'Média',
     createdAt: '2026-08-04 14:20',
     updatedAt: '2026-08-04 14:20',
-    description: 'Gostaria de saber como solicitar franquia de bagagem adicional para viagem internacional.',
+    description: 'Gostaria de saber como solicitar franquia de bagagem adicional para viagem corporativa demonstrativa.',
     assignedTo: null,
     resolution: null
   },
   {
     id: 'TICK-102',
-    title: 'Solicitação de limite emergencial Uber plantão',
-    requester: 'Mariana Costa',
+    title: 'Solicitação de limite emergencial demonstrativo',
+    requester: 'Solicitante Exemplo B',
     category: 'Mobilidade',
     status: 'RESOLVIDO',
     priority: 'Alta',
     createdAt: '2026-08-01 09:10',
     updatedAt: '2026-08-01 15:30',
-    description: 'Preciso de aumento temporário do limite mensal para deslocamentos emergenciais em plantão.',
-    assignedTo: 'Maria Catarina',
+    description: 'Preciso de aumento temporário do limite mensal para deslocamentos emergenciais demonstrativos.',
+    assignedTo: 'Atendente (Simulado)',
     resolution: 'Limite aumentado temporariamente conforme política de emergência.'
+  },
+  {
+    id: 'TICK-103',
+    title: 'Erro no rastreamento de objeto demonstrativo',
+    requester: 'Solicitante Exemplo A',
+    category: 'Correios',
+    status: 'EM_ABERTO',
+    priority: 'Alta',
+    createdAt: '2026-08-05 10:15',
+    updatedAt: '2026-08-05 10:15',
+    description: 'Código de rastreamento BR-DEMO-0001 não atualiza há 3 dias. Preciso de verificação.',
+    assignedTo: null,
+    resolution: null
+  },
+  {
+    id: 'TICK-104',
+    title: 'Solicitação de impressão urgente demonstrativa',
+    requester: 'Solicitante Exemplo B',
+    category: 'Xerox',
+    status: 'EM_ATENDIMENTO',
+    priority: 'Média',
+    createdAt: '2026-08-03 11:00',
+    updatedAt: '2026-08-05 09:30',
+    description: 'Material gráfico para evento demonstrativo precisa ser impresso até sexta-feira.',
+    assignedTo: 'Operador (Simulado)',
+    resolution: null
+  },
+  {
+    id: 'TICK-105',
+    title: 'Dúvida sobre política de viagem demonstrativa',
+    requester: 'Solicitante Exemplo A',
+    category: 'Viagens',
+    status: 'RESOLVIDO',
+    priority: 'Baixa',
+    createdAt: '2026-07-28 16:45',
+    updatedAt: '2026-07-29 10:00',
+    description: 'Qual o procedimento para solicitar viagem internacional demonstrativa?',
+    assignedTo: 'Atendente (Simulado)',
+    resolution: 'Procedimento orientado conforme manual demonstrativo.'
+  },
+  {
+    id: 'TICK-106',
+    title: 'Problema com acesso à plataforma de mobilidade',
+    requester: 'Solicitante Exemplo C',
+    category: 'Mobilidade',
+    status: 'EM_ABERTO',
+    priority: 'Urgente',
+    createdAt: '2026-08-06 08:00',
+    updatedAt: '2026-08-06 08:00',
+    description: 'Não consigo acessar a plataforma Uber for Business. Erro de autenticação demonstrativo.',
+    assignedTo: null,
+    resolution: null
   }
 ];
 
@@ -100,7 +152,7 @@ router.post('/', validate(createTicketSchema), async (req: Request, res: Respons
 });
 
 // PUT /api/tickets/:id/resolve - Marcar como resolvido
-router.put('/:id/resolve', authorize('faturamento', 'coordenadora', 'administrador'), validate(resolveTicketSchema), async (req: Request, res: Response) => {
+router.put('/:id/resolve', authorize('operador', 'coordenacao', 'administrador'), validate(resolveTicketSchema), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { resolution, assignedTo } = req.body;
 

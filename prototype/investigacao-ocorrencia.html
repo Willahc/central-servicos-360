@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Investigação de Ocorrência</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="investigacao-ocorrencia">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <!-- Cabeçalho -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h1 class="page-title">Investigação de Ocorrência</h1>
+            <span class="badge-demo" style="background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning);">Pendente Levantamento de Campos</span>
+          </div>
+          <p class="page-subtitle">Registro inicial e triagem de ocorrências operacionais, patrimoniais e desvios de processo.</p>
+        </div>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html?type=investigacao_ocorrencia" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">📋 Registrar Nova Ocorrência</a>
+        </div>
+      </div>
+
+      <!-- Faixa de KPIs -->
+      <div class="kpi-mini-grid grid-4-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📋</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Ocorrências Registradas</span>
+            <span class="kpi-mini-val" id="kpi-oco-total">2</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Triagem Preliminar</span>
+            <span class="kpi-mini-val" id="kpi-oco-triagem">1</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">🔍</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Investigação</span>
+            <span class="kpi-mini-val" id="kpi-oco-investigacao">1</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">⏱️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Status do Levantamento</span>
+            <span class="kpi-mini-val" style="font-size: 0.85rem; color: var(--warning);">Aguardando Tela Origem</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout 2 Colunas -->
+      <div class="form-layout-grid">
+        <div class="form-main-col">
+          <!-- Callout Mandatório de Levantamento Pendente -->
+          <div class="alert-box alert-warning" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: var(--spacing-md); border-left: 4px solid var(--warning);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 1.5rem;">⚠️</span>
+              <div>
+                <strong style="font-size: 0.88rem; color: var(--text-primary);">Frente Confirmada no Catálogo — Campos Internos Pendentes de Levantamento</strong>
+                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.4;">
+                  A opção <strong>Investigação de Ocorrência</strong> foi confirmada pelo screenshot autenticado da ferramenta de origem, porém sua tela interna de formulário ainda não foi fornecida. Exibindo estrutura demonstrativa mínima. Não assumir equivalência com Solicitação de Imagens / CFTV.
+                </div>
+              </div>
+            </div>
+            <span class="badge-demo">Status: Pendente</span>
+          </div>
+
+          <!-- Filtros -->
+          <div class="filter-bar" style="margin-bottom: var(--spacing-md); display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1.5; min-width: 200px;">
+              <label for="filter-oco-search" class="form-label" style="margin-bottom: 2px;">Buscar Ocorrência:</label>
+              <input type="text" id="filter-oco-search" class="form-control" placeholder="Buscar por código, local, título, solicitante...">
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-oco-category" class="form-label" style="margin-bottom: 2px;">Categoria (Provisória):</label>
+              <select id="filter-oco-category" class="form-control">
+                <option value="ALL">Todas as Categorias</option>
+                <option value="Patrimonial / Operacional">Patrimonial / Operacional</option>
+                <option value="Acesso / Segurança">Acesso / Segurança</option>
+                <option value="Processual">Processual</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-oco-status" class="form-label" style="margin-bottom: 2px;">Status:</label>
+              <select id="filter-oco-status" class="form-control">
+                <option value="ALL">Todos os Status</option>
+                <option value="EM_ATENDIMENTO">Em Atendimento</option>
+                <option value="PENDENTE">Pendente de Triagem</option>
+                <option value="CONCLUIDO">Concluído</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="button" id="btn-oco-export" class="btn btn-secondary" style="padding: 8px 12px;" title="Exportar dados">📥 CSV</button>
+              <button type="button" id="btn-oco-clear" class="btn btn-ghost" style="padding: 8px 12px;" title="Limpar filtros">Limpar</button>
+            </div>
+          </div>
+
+          <!-- Tabela de Ocorrências -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">ID</th>
+                  <th style="width: 130px;">Categoria</th>
+                  <th>Título da Ocorrência / Local</th>
+                  <th>Solicitante / Data</th>
+                  <th style="width: 140px;">Status Levantamento</th>
+                  <th style="width: 120px;">Status</th>
+                  <th style="width: 110px; text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="investigacao-ocorrencia-tbody">
+                <!-- Preenchido via app.js -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:0.75rem;color:var(--text-muted);">
+            <span id="investigacao-ocorrencia-footer-info">Carregando registros de ocorrência...</span>
+            <span>Campos e procedimento pendentes de levantamento no sistema atual</span>
+          </div>
+        </div>
+
+        <!-- Coluna Direita -->
+        <div class="form-side-col">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📌 Evidência de Benchmark</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Fonte da Evidência:</span>
+                <strong style="color: var(--success);">Screenshot Autenticado</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Confirmação no Catálogo:</span>
+                <strong style="color: var(--text-primary);">SIM (Item Presente)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Tela Interna Disponível:</span>
+                <strong style="color: var(--danger);">NÃO (Aguardando Print)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Distinção de Imagens/CFTV:</span>
+                <strong style="color: var(--accent);">Mantidas Separadas</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">💡 Próximos Passos de Levantamento</span>
+            </div>
+            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+              <p style="margin:0;">• <strong>Passo 1:</strong> Obter screenshot do formulário interno de Investigação de Ocorrência.</p>
+              <p style="margin:0;">• <strong>Passo 2:</strong> Mapear os campos essenciais vs. dados automáticos do SAP RH.</p>
+              <p style="margin:0;">• <strong>Passo 3:</strong> Refinar o schema de dados sem duplicar com o módulo de Imagens.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/api-client.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -3,37 +3,324 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Correios e Envios</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="correios">
   <div id="app-layout-root">
-    <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+    <main class="page-content service-table-page correios-page" id="page-content-slot">
+      <!-- Cabeçalho com Ação Alinhada -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
         <div>
-          <h1 class="page-title">Correios e Envios (RN-COR)</h1>
-          <p class="page-subtitle">Solicitação de postagem, código de rastreamento e indicação de uso Pessoal vs. Institucional.</p>
+          <h1 class="page-title">Correios e Envios</h1>
+          <p class="page-subtitle">Postagens, rastreamentos e acompanhamento de envios.</p>
         </div>
-        <div>
-          <a href="solicitacao-nova.html" class="btn btn-primary">📦 Nova Postagem</a>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html?type=correios" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">📦 Nova Postagem</a>
         </div>
       </div>
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Pedido</th>
-              <th>Descrição do Envio</th>
-              <th>Modalidade</th>
-              <th>Código Rastreamento (RN-COR-003)</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="correios-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
+      <!-- Faixa de 6 KPIs Compactos Derivados da Fonte Única -->
+      <div class="kpi-mini-grid grid-6-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">📦</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Postagens no Período</span>
+            <span class="kpi-mini-val" id="kpi-cor-total">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">🚚</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Trânsito</span>
+            <span class="kpi-mini-val" id="kpi-cor-transito">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Entregues</span>
+            <span class="kpi-mini-val" id="kpi-cor-entregues">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Pendências</span>
+            <span class="kpi-mini-val" id="kpi-cor-pendentes">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">🔍</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Rastreamentos Ativos</span>
+            <span class="kpi-mini-val" id="kpi-cor-rastreamentos">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">💰</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Custo Demonstrativo</span>
+            <span class="kpi-mini-val" id="kpi-cor-custo" style="font-size: 0.95rem;">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composição Principal em 2 Colunas -->
+      <div class="form-layout-grid service-main-grid">
+        <!-- Coluna Esquerda: Gráfico de Volume, Tabela de Postagens e Rastreamentos -->
+        <div class="form-main-col service-table-column">
+          <!-- Callout Compacto RN-COR-002 -->
+          <div class="alert-box alert-info" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.25rem;">📦</span>
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Envios Expressos & Classificação (RN-COR-002)</strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Envios expressos do tipo SEDEX 10 exigem justificativa no fluxo demonstrativo.</div>
+              </div>
+            </div>
+            <span class="badge-demo">Demonstrativo</span>
+          </div>
+
+          <!-- Gráfico Local de Volume de Postagens -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📈 Volume de Postagens por Dia — Demonstrativo</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Últimos 7 dias (simulado)</span>
+            </div>
+            <div class="panel-body" style="padding: 16px;">
+              <div style="height: 140px; width: 100%; display: flex; align-items: flex-end; gap: 16px; padding-top: 10px; border-bottom: 1px solid var(--border-light); justify-content: space-around;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">1</span>
+                  <div style="width: 100%; max-width: 32px; height: 35px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Seg</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">2</span>
+                  <div style="width: 100%; max-width: 32px; height: 65px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Ter</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">1</span>
+                  <div style="width: 100%; max-width: 32px; height: 35px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Qua</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">3</span>
+                  <div style="width: 100%; max-width: 32px; height: 95px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Qui</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">2</span>
+                  <div style="width: 100%; max-width: 32px; height: 65px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Sex</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">0</span>
+                  <div style="width: 100%; max-width: 32px; height: 8px; background: var(--border); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.5;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Sáb</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">0</span>
+                  <div style="width: 100%; max-width: 32px; height: 8px; background: var(--border); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.5;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Dom</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabela de Postagens Recentes -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📋 Postagens Recentes & Acompanhamento</span>
+              <a href="solicitacao-nova.html?type=correios" class="panel-action">Nova Postagem</a>
+            </div>
+            <div class="panel-body service-table-panel-body" style="padding: 0;">
+              <div class="service-table-scroll">
+              <table class="data-table correios-main-table">
+                <thead>
+                  <tr>
+                    <th style="width: 120px;">ID Envio</th>
+                    <th>Descrição da Postagem</th>
+                    <th style="width: 150px;">Destinatário</th>
+                    <th style="width: 100px;">Modalidade</th>
+                    <th style="width: 110px;">Tipo de Uso</th>
+                    <th style="width: 130px;">Rastreamento</th>
+                    <th style="width: 120px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="correios-tbody">
+                  <!-- Renderizado pelo app.js -->
+                </tbody>
+              </table>
+              </div>
+              <div style="padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
+                <span id="correios-table-footer">Exibindo todas as postagens registradas (simuladas para validação)</span>
+                <span>Página 1 de 1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rastreamentos Ativos -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔍 Rastreamentos Ativos — Demonstração</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Dados demonstrativos</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;" id="tracking-active-cards">
+              <!-- Renderizado pelo app.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Painel Lateral Operacional -->
+        <div class="form-side-col service-side-panel">
+          <!-- Modalidades Utilizadas -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📊 Modalidades Utilizadas</span>
+              <span class="badge-demo">Simulado</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">SEDEX (Convencional)</span>
+                  <strong style="color: var(--text-primary);">1 envio (25,0%) • R$ 38,20 sim.</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 25%; background: var(--accent);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">SEDEX 10 (Urgente)</span>
+                  <strong style="color: var(--text-primary);">1 envio (25,0%) • R$ 58,40 sim.</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 25%; background: var(--warning);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">PAC (Econômico)</span>
+                  <strong style="color: var(--text-primary);">2 envios (50,0%) • R$ 52,30 sim.</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 50%; background: var(--info);"></div>
+                </div>
+              </div>
+              <div style="padding-top: 8px; border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; font-size: var(--font-xs);">
+                <span style="color: var(--text-secondary);">Custo Demonstrativo Total:</span>
+                <strong style="color: var(--success);" id="cor-total-side">R$ 148,90 sim.</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipo de Utilização — Fluxo Proposto -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🏢 Tipo de Utilização</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Classificação demonstrativa</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--accent);">●</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">Uso Institucional</span>
+                </div>
+                <strong style="color: var(--text-primary);">3 envios (75%)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--warning);">●</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">Uso Pessoal (Proposto)</span>
+                </div>
+                <strong style="color: var(--text-primary);">1 envio (25%)</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status dos Envios -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🚚 Status dos Envios</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Total: 4</span>
+            </div>
+            <div class="panel-body" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Em Trânsito:</span>
+                <span class="status-badge status-EM_ATENDIMENTO" style="font-size: 0.65rem;">2 envios</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Entregues:</span>
+                <span class="status-badge status-CONCLUIDO" style="font-size: 0.65rem;">1 envio</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Aguardando Postagem:</span>
+                <span class="status-badge status-PENDENTE_APROVACAO" style="font-size: 0.65rem;">1 pendência</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas e Pendências -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔔 Alertas e Pendências</span>
+              <span style="background: var(--danger); color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: var(--radius-full); font-weight: 700;">2</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⚠️</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Envio SEDEX 10 Registrado</div>
+                  <div style="color: var(--text-secondary);">SOL-2026-004 requer justificativa para auditoria de faturamento.</div>
+                  <span class="status-badge status-REJEITADO" style="font-size: 0.6rem; margin-top: 4px;">Atenção</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⏳</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Item Aguardando Postagem</div>
+                  <div style="color: var(--text-secondary);">COR-2026-004 aguarda despacho na agência credenciada.</div>
+                  <span class="status-badge status-PENDENTE_APROVACAO" style="font-size: 0.6rem; margin-top: 4px;">Pendência</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Rastreamento Detalhado -->
+      <div id="modal-tracking-detail" class="modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-tracking-title">
+        <div class="modal-dialog" style="max-width: 540px; background: var(--surface); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-xl); border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.25rem;">📦</span>
+              <h3 id="modal-tracking-title" style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary);">Rastreamento Correios</h3>
+            </div>
+            <button type="button" id="btn-close-tracking-modal" class="btn btn-ghost btn-sm" style="font-size: 1.2rem; line-height: 1; padding: 2px 8px;">✕</button>
+          </div>
+          <div id="modal-tracking-body" style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+          <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border-light); text-align: right;">
+            <button type="button" id="btn-close-tracking-footer" class="btn btn-secondary btn-sm">Fechar</button>
+          </div>
+        </div>
       </div>
     </main>
   </div>

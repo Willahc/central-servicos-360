@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Achados e Perdidos</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="achados-perdidos">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <!-- Cabeçalho -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
+        <div>
+          <h1 class="page-title">Achados e Perdidos</h1>
+          <p class="page-subtitle">Central de registro, localização e devolução segura de objetos esquecidos no complexo hospitalar.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a href="solicitacao-nova.html?type=achados_perdidos&journey=ENCONTREI_ITEM" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px;">🟢 Encontrei um Item</a>
+          <a href="solicitacao-nova.html?type=achados_perdidos&journey=PERDI_ITEM" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">🔍 Perdi um Item</a>
+        </div>
+      </div>
+
+      <!-- Faixa de KPIs -->
+      <div class="kpi-mini-grid grid-5-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📦</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Itens Catalogados</span>
+            <span class="kpi-mini-val" id="kpi-ach-total">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">🔎</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Busca Ativa</span>
+            <span class="kpi-mini-val" id="kpi-ach-busca">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">📍</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Aguardando Retirada</span>
+            <span class="kpi-mini-val" id="kpi-ach-retirada">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">🤝</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Devolvidos no Mês</span>
+            <span class="kpi-mini-val" id="kpi-ach-devolvidos">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">⏱️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Taxa de Localização</span>
+            <span class="kpi-mini-val">88.5% sim.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout 2 Colunas -->
+      <div class="form-layout-grid">
+        <div class="form-main-col">
+          <!-- Seletor de Jornada Rápido -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-md);flex-wrap:wrap;gap:12px;">
+            <div class="journey-toggle-bar">
+              <button type="button" class="journey-toggle-btn active" id="filter-journey-all" onclick="setAchadosJourneyFilter('ALL')">Todos os Registros</button>
+              <button type="button" class="journey-toggle-btn" id="filter-journey-found" onclick="setAchadosJourneyFilter('ENCONTREI_ITEM')">🟢 Itens Encontrados</button>
+              <button type="button" class="journey-toggle-btn" id="filter-journey-lost" onclick="setAchadosJourneyFilter('PERDI_ITEM')">🔵 Itens Perdidos</button>
+            </div>
+            <span class="badge-demo">Custódia Segura Portaria Central</span>
+          </div>
+
+          <!-- Filtros -->
+          <div class="filter-bar" style="margin-bottom: var(--spacing-md); display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1.5; min-width: 200px;">
+              <label for="filter-ach-search" class="form-label" style="margin-bottom: 2px;">Buscar Objeto / Local:</label>
+              <input type="text" id="filter-ach-search" class="form-control" placeholder="Buscar por descrição, marca, local, ramal...">
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-ach-category" class="form-label" style="margin-bottom: 2px;">Categoria:</label>
+              <select id="filter-ach-category" class="form-control">
+                <option value="ALL">Todas as Categorias</option>
+                <option value="Documentos/Crachás">Documentos / Crachás</option>
+                <option value="Eletrônicos">Eletrônicos</option>
+                <option value="Óculos">Óculos</option>
+                <option value="Chaves">Chaves</option>
+                <option value="Vestuário/Acessórios">Vestuário / Acessórios</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-ach-status" class="form-label" style="margin-bottom: 2px;">Status / Estágio:</label>
+              <select id="filter-ach-status" class="form-control">
+                <option value="ALL">Todos os Estágios</option>
+                <option value="ITEM_LOCALIZADO">Item Localizado / Retirada</option>
+                <option value="EM_BUSCA">Em Busca Ativa</option>
+                <option value="DEVOLVIDO">Devolvido ao Titular</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="button" id="btn-ach-export" class="btn btn-secondary" style="padding: 8px 12px;" title="Exportar dados">📥 CSV</button>
+              <button type="button" id="btn-ach-clear" class="btn btn-ghost" style="padding: 8px 12px;" title="Limpar filtros">Limpar</button>
+            </div>
+          </div>
+
+          <!-- Tabela de Achados e Perdidos -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">ID</th>
+                  <th style="width: 100px;">Jornada</th>
+                  <th style="width: 120px;">Categoria</th>
+                  <th>Descrição do Objeto</th>
+                  <th>Local / Data</th>
+                  <th style="width: 130px;">Status</th>
+                  <th style="width: 110px; text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="achados-tbody">
+                <!-- Preenchido via app.js -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:0.75rem;color:var(--text-muted);">
+            <span id="achados-footer-info">Carregando inventário de achados e perdidos...</span>
+            <span>Retirada mediante apresentação de documento ou crachá institucional</span>
+          </div>
+        </div>
+
+        <!-- Coluna Direita -->
+        <div class="form-side-col">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📍 Ponto Central de Custódia</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Local de Guarda:</span>
+                <strong style="color: var(--text-primary);">Recepção Central (Guichê 4)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Horário de Retirada:</span>
+                <strong style="color: var(--success);">24h (Plantão Contínuo)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Telefone / Ramal:</span>
+                <strong style="color: var(--accent);">Ramal 4021 (Simulado)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Prazo de Custódia:</span>
+                <strong style="color: var(--text-secondary);">90 dias regulamentares</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">💡 Diretrizes de Devolução</span>
+            </div>
+            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+              <p style="margin:0;">• <strong>Itens com Identificação:</strong> Notificação automática via e-mail corporativo ao titular.</p>
+              <p style="margin:0;">• <strong>Eletrônicos & Valores:</strong> Desbloqueio ou comprovação de posse no ato da entrega.</p>
+              <p style="margin:0;">• <strong>Termo de Entrega:</strong> Assinatura de recibo arquivado na trilha de auditoria.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/api-client.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    let _activeAchadosJourney = 'ALL';
+    function setAchadosJourneyFilter(val) {
+      _activeAchadosJourney = val;
+      document.getElementById('filter-journey-all')?.classList.toggle('active', val === 'ALL');
+      document.getElementById('filter-journey-found')?.classList.toggle('active', val === 'ENCONTREI_ITEM');
+      document.getElementById('filter-journey-lost')?.classList.toggle('active', val === 'PERDI_ITEM');
+      if (window.CS360_UPDATE_ACHADOS_TABLE) window.CS360_UPDATE_ACHADOS_TABLE();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Entregas</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="entregas">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <!-- Cabeçalho -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
+        <div>
+          <h1 class="page-title">Entregas & Malotes</h1>
+          <p class="page-subtitle">Coleta, malotes, recebimento e movimentação física de documentos e itens entre setores.</p>
+        </div>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html?type=entregas" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">📦 Nova Solicitação de Entrega</a>
+        </div>
+      </div>
+
+      <!-- Faixa de KPIs -->
+      <div class="kpi-mini-grid grid-5-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📋</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Total de Entregas</span>
+            <span class="kpi-mini-val" id="kpi-ent-total">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Aguardando Coleta</span>
+            <span class="kpi-mini-val" id="kpi-ent-coleta">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">🚚</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Trânsito Interno</span>
+            <span class="kpi-mini-val" id="kpi-ent-transito">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Entregues Hoje</span>
+            <span class="kpi-mini-val" id="kpi-ent-entregues">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--danger-bg); color: var(--danger);">🚨</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Alta Prioridade</span>
+            <span class="kpi-mini-val" id="kpi-ent-urgentes">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout 2 Colunas -->
+      <div class="form-layout-grid">
+        <div class="form-main-col">
+          <!-- Callout de Diferenciação Correios vs Entregas -->
+          <div class="alert-box alert-info" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: var(--spacing-md);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.25rem;">📦</span>
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Movimentação Interna Intersetorial</strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Para objetos postais externos ou envio pelos Correios, utilize o módulo de <strong>Correios e Envios</strong>.</div>
+              </div>
+            </div>
+            <span class="badge-demo">Demonstrativo</span>
+          </div>
+
+          <!-- Filtros -->
+          <div class="filter-bar" style="margin-bottom: var(--spacing-md); display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1.5; min-width: 200px;">
+              <label for="filter-ent-search" class="form-label" style="margin-bottom: 2px;">Buscar Entrega / Malote:</label>
+              <input type="text" id="filter-ent-search" class="form-control" placeholder="Buscar por código, remetente, destinatário...">
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-ent-status" class="form-label" style="margin-bottom: 2px;">Status:</label>
+              <select id="filter-ent-status" class="form-control">
+                <option value="ALL">Todos os Status</option>
+                <option value="AGUARDANDO_COLETA">Aguardando Coleta</option>
+                <option value="COLETADO">Coletado</option>
+                <option value="EM_TRANSITO">Em Trânsito Interno</option>
+                <option value="ENTREGUE">Entregue</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-ent-type" class="form-label" style="margin-bottom: 2px;">Tipo:</label>
+              <select id="filter-ent-type" class="form-control">
+                <option value="ALL">Todos os Tipos</option>
+                <option value="Malote">Malote</option>
+                <option value="Coleta">Coleta</option>
+                <option value="Entrega">Entrega</option>
+                <option value="Recebimento">Recebimento</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="button" id="btn-ent-export" class="btn btn-secondary" style="padding: 8px 12px;" title="Exportar dados">📥 CSV</button>
+              <button type="button" id="btn-ent-clear" class="btn btn-ghost" style="padding: 8px 12px;" title="Limpar filtros">Limpar</button>
+            </div>
+          </div>
+
+          <!-- Tabela de Entregas -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">Código</th>
+                  <th style="width: 100px;">Tipo</th>
+                  <th>Origem ➔ Destino</th>
+                  <th>Remetente / Destinatário</th>
+                  <th style="width: 100px;">Prioridade</th>
+                  <th style="width: 125px;">Status</th>
+                  <th style="width: 110px; text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="entregas-tbody">
+                <!-- Preenchido via app.js -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:0.75rem;color:var(--text-muted);">
+            <span id="entregas-footer-info">Carregando fila de entregas internas...</span>
+            <span>Rastreamento Interno Integrado</span>
+          </div>
+        </div>
+
+        <!-- Coluna Direita -->
+        <div class="form-side-col">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔄 Rotas de Malotes Programadas</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Rota Manhã (Blocos A / B / C):</span>
+                <strong style="color: var(--success);">Concluída às 10h00</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Rota Tarde (IEP & Diagnósticos):</span>
+                <strong style="color: var(--accent);">Partida às 14h30</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Rota Especial Farmácia / UTI:</span>
+                <strong style="color: var(--warning);">Contínua sob demanda</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">💡 Protocolos de Custódia</span>
+            </div>
+            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+              <p style="margin:0;">• <strong>Malotes Lacrados:</strong> Registro obrigatório do número do lacre.</p>
+              <p style="margin:0;">• <strong>Prontuários SAME:</strong> Confirmação de recebimento por assinatura física/digital.</p>
+              <p style="margin:0;">• <strong>Itens Especiais:</strong> Entrega ponto a ponto sem paradas intermediárias.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/api-client.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,6 +1,18 @@
 import { BaseEntity, BaseRepository } from './BaseRepository';
 
-export type ServiceFront = 'viagem' | 'mobilidade' | 'correios' | 'xerox';
+export type ServiceFront =
+  | 'viagem'
+  | 'mobilidade'
+  | 'transporte'
+  | 'estacionamento'
+  | 'entregas'
+  | 'achados_perdidos'
+  | 'solicitacao_imagens'
+  | 'investigacao_ocorrencia'
+  | 'autorizacao_excepcional'
+  | 'liberacao_acesso'
+  | 'correios'
+  | 'xerox';
 
 export type RequestStatus =
   | 'RASCUNHO'

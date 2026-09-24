@@ -3,35 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Atendimento & Chamados</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="atendimentos">
   <div id="app-layout-root">
     <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+      <!-- Cabeçalho (título dinâmico via app.js) -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
         <div>
-          <h1 class="page-title">Central de Atendimento Humano</h1>
-          <p class="page-subtitle">Fila de chamados escalonados pelo chatbot ou abertos pelos colaboradores.</p>
+          <h1 class="page-title" id="atend-page-title">Atendimento & Chamados</h1>
+          <p class="page-subtitle" id="atend-page-subtitle">Acompanhe chamados, dúvidas e solicitações de suporte.</p>
+        </div>
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px;">
+          <button class="btn btn-primary btn-sm" id="btn-novo-chamado" style="display: none;">+ Novo Chamado</button>
+          <span class="badge-demo" id="atend-rbac-badge">Perfil: Colaborador</span>
         </div>
       </div>
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Chamado</th>
-              <th>Assunto</th>
-              <th>Solicitante</th>
-              <th>Frente / Categoria</th>
-              <th>Prioridade</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="atendimentos-tbody">
-            <!-- Renderizado dinamicamente pelo app.js -->
-          </tbody>
-        </table>
+      <!-- Aviso RBAC -->
+      <div class="alert-box alert-info" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: var(--spacing-lg); font-size: var(--font-xs);" id="atend-rbac-callout">
+        <span style="font-size: 1rem;">💡</span>
+        <div style="flex: 1;">
+          <span style="font-weight: 600; color: var(--text-primary);">Modo demonstrativo</span>
+          <span style="color: var(--text-secondary);" id="atend-rbac-hint"> — Visualizando chamados do cenário simulado.</span>
+        </div>
+        <span class="badge-demo">Simulação</span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-mini-grid grid-6-kpis" id="atend-kpi-grid">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">📋</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label" id="kpi-atend-label-1">Meus Chamados</span>
+            <span class="kpi-mini-val" id="kpi-atend-1">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">📬</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label" id="kpi-atend-label-2">Em Aberto</span>
+            <span class="kpi-mini-val" id="kpi-atend-2">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">⚙️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label" id="kpi-atend-label-3">Em Atendimento</span>
+            <span class="kpi-mini-val" id="kpi-atend-3">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label" id="kpi-atend-label-4">Resolvidos</span>
+            <span class="kpi-mini-val" id="kpi-atend-4">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--danger-bg); color: var(--danger);">🔥</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label" id="kpi-atend-label-5">Alta Prioridade</span>
+            <span class="kpi-mini-val" id="kpi-atend-5">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">⏱️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label" id="kpi-atend-label-6">Tempo Médio</span>
+            <span class="kpi-mini-val" id="kpi-atend-6" style="font-size: 0.9rem;">3h sim.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composição Principal em 2 Colunas -->
+      <div class="form-layout-grid">
+        <!-- Coluna Esquerda: Fila e Detalhes -->
+        <div class="form-main-col">
+          <!-- Fila de Chamados -->
+          <div class="panel">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="panel-title" id="atend-queue-title">📋 Meus Chamados</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);" id="atend-queue-counter">-</span>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <!-- Filtros -->
+              <div style="padding: 10px 16px; background: var(--surface-muted); border-bottom: 1px solid var(--border-light); display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: var(--font-xs); font-weight: 600; color: var(--text-secondary);">Filtrar:</span>
+                <select id="filter-atend-status" class="form-control" style="width: auto; padding: 3px 8px; font-size: var(--font-xs);">
+                  <option value="TODOS">Todos os Status</option>
+                  <option value="EM_ABERTO">Em Aberto</option>
+                  <option value="EM_ATENDIMENTO">Em Atendimento</option>
+                  <option value="RESOLVIDO">Resolvido</option>
+                </select>
+                <select id="filter-atend-categoria" class="form-control" style="width: auto; padding: 3px 8px; font-size: var(--font-xs);">
+                  <option value="TODOS">Todas Categorias</option>
+                  <option value="Viagens">Viagens</option>
+                  <option value="Mobilidade">Mobilidade</option>
+                  <option value="Correios">Correios</option>
+                  <option value="Xerox">Xerox</option>
+                </select>
+                <select id="filter-atend-prioridade" class="form-control" style="width: auto; padding: 3px 8px; font-size: var(--font-xs);" id="filter-atend-prioridade">
+                  <option value="TODOS">Todas Prioridades</option>
+                  <option value="Urgente">Urgente</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Média">Média</option>
+                  <option value="Baixa">Baixa</option>
+                </select>
+              </div>
+
+              <!-- Tabela -->
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 80px;white-space:nowrap;">ID</th>
+                    <th style="min-width:140px;white-space:nowrap;">Assunto</th>
+                    <th style="width: 110px;" id="th-solicitante">Solicitante</th>
+                    <th style="width: 80px;white-space:nowrap;">Categoria</th>
+                    <th style="width: 75px;white-space:nowrap;">Prioridade</th>
+                    <th style="width: 80px;white-space:nowrap;">Atualização</th>
+                    <th style="width: 85px;white-space:nowrap;">Status</th>
+                    <th style="width: 110px;text-align:right;white-space:nowrap;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="atendimentos-tbody">
+                  <!-- Renderizado pelo app.js -->
+                </tbody>
+              </table>
+              <div style="padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
+                <span id="atend-table-footer">-</span>
+                <span>Página 1 de 1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Histórico / Atividade Recente -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📜 Atividade Recente</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Últimas atualizações</span>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div id="atend-activity-list">
+                <!-- Renderizado pelo app.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Painéis Auxiliares -->
+        <div class="form-side-col">
+          <!-- Distribuição por Frente -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📊 Chamados por Frente</span>
+              <span class="badge-demo">Simulado</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Viagens</span>
+                  <strong style="color: var(--text-primary);" id="cat-viagens">0 (0%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div id="bar-viagens" style="height: 100%; width: 0%; background: var(--accent);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Mobilidade</span>
+                  <strong style="color: var(--text-primary);" id="cat-mobilidade">0 (0%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div id="bar-mobilidade" style="height: 100%; width: 0%; background: var(--info);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Correios</span>
+                  <strong style="color: var(--text-primary);" id="cat-correios">0 (0%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div id="bar-correios" style="height: 100%; width: 0%; background: var(--warning);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Xerox</span>
+                  <strong style="color: var(--text-primary);" id="cat-xerox">0 (0%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div id="bar-xerox" style="height: 100%; width: 0%; background: var(--success);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prioridades -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔥 Prioridades</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Urgente</span>
+                <span style="font-weight: 700; color: var(--danger);" id="pri-urgente">0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Alta</span>
+                <span style="font-weight: 700; color: var(--warning);" id="pri-alta">0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Média</span>
+                <span style="font-weight: 700; color: var(--info);" id="pri-media">0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Baixa</span>
+                <span style="font-weight: 700; color: var(--success);" id="pri-baixa">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Escalonamentos -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔺 Escalonamentos</span>
+              <span style="background: var(--warning); color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: var(--radius-full); font-weight: 700;" id="escal-count-badge">0</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);" id="escal-container">
+              <!-- Renderizado pelo app.js -->
+            </div>
+          </div>
+
+          <!-- Ajuda Rápida / Novo Chamado -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">ℹ️ Ajuda Rápida</span>
+            </div>
+            <div class="panel-body" style="padding: 12px 16px; font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.5; display: flex; flex-direction: column; gap: 8px;">
+              <p style="margin: 0;">• <strong>Em Aberto:</strong> Chamado registrado, aguardando atendimento.</p>
+              <p style="margin: 0;">• <strong>Em Atendimento:</strong> Chamado assumido por atendente.</p>
+              <p style="margin: 0;">• <strong>Resolvido:</strong> Chamado encerrado com solução.</p>
+              <p style="margin: 0;">• <strong>Escalonamento:</strong> Prioridade elevada para atendimento prioritário.</p>
+              <div style="padding: 6px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">
+                ℹ️ Dados demonstrativos. Backend filtra por perfil quando aplicável.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Detalhes do Chamado -->
+      <div id="modal-ticket-detail" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);" role="dialog" aria-modal="true" aria-labelledby="modal-ticket-detail-title">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 20px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="modal-ticket-detail-title" style="margin: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              <span>📋</span> Detalhes do Chamado
+            </h3>
+            <button id="btn-close-ticket-detail" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);" aria-label="Fechar">&times;</button>
+          </div>
+          <div id="modal-ticket-detail-content" style="font-size: var(--font-xs); color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px;">
+            <!-- Renderizado dinamicamente -->
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+            <button id="btn-close-ticket-detail-2" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Novo Chamado -->
+      <div id="modal-novo-chamado" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);" role="dialog" aria-modal="true" aria-labelledby="modal-novo-chamado-title">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); max-width: 500px; width: 90%; padding: 20px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="modal-novo-chamado-title" style="margin: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              <span>➕</span> Novo Chamado
+            </h3>
+            <button id="btn-close-novo-chamado" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);" aria-label="Fechar">&times;</button>
+          </div>
+          <form id="form-novo-chamado" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="ticket-title" style="font-size: var(--font-xs); font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 4px;">Assunto *</label>
+              <input type="text" id="ticket-title" class="form-control" placeholder="Descreva brevemente o problema" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="ticket-category" style="font-size: var(--font-xs); font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 4px;">Categoria *</label>
+              <select id="ticket-category" class="form-control" required>
+                <option value="">Selecione...</option>
+                <option value="Viagens">Viagens</option>
+                <option value="Mobilidade">Mobilidade</option>
+                <option value="Correios">Correios</option>
+                <option value="Xerox">Xerox</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="ticket-description" style="font-size: var(--font-xs); font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 4px;">Descrição *</label>
+              <textarea id="ticket-description" class="form-control" rows="3" placeholder="Detalhe sua solicitação ou dúvida" required style="resize: vertical;"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="ticket-priority" style="font-size: var(--font-xs); font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 4px;">Prioridade</label>
+              <select id="ticket-priority" class="form-control">
+                <option value="Média">Média</option>
+                <option value="Baixa">Baixa</option>
+                <option value="Alta">Alta</option>
+              </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+              <button type="button" id="btn-cancel-novo-chamado" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;">Cancelar</button>
+              <button type="submit" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.85rem;">Enviar Chamado</button>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
   </div>

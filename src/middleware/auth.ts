@@ -1,11 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import { UnauthorizedError, ForbiddenError } from '../common/errors/AppError';
+import { userRepository } from '../database';
+import { AuthorizedRole, ServiceScope, normalizeLegacyRole } from '../common/authorization';
+import { ServiceFront } from '../common/interfaces/service-request.interface';
+import { hasServiceScope } from '../common/authorization';
+import { envConfig } from '../config/env.config';
 
 export interface AuthUser {
   id: string;
   email: string;
   role: string;
+  serviceScopes: ServiceScope[];
+  approvalScopes: string[];
   name: string;
+  employeeId: string;
+  department: string;
+  costCenter: string;
 }
 
 declare global {
@@ -32,7 +42,10 @@ declare global {
  *
  * NÃO implementar Azure AD, Keycloak, SAML ou OAuth corporativo nesta etapa.
  */
-export function authenticate(req: Request, res: Response, next: NextFunction) {
+export async function authenticate(req: Request, res: Response, next: NextFunction) {
+  if (!envConfig.mockAuth) {
+    throw new UnauthorizedError('Autenticação real ainda não configurada');
+  }
   const token = req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
@@ -44,28 +57,34 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     // Formatos suportados:
     // Novo: mock_jwt_token_${userId}_${role}_${timestamp}
     // Legado: mock_jwt_token_${userId}_${timestamp}
-    const VALID_ROLES = ['colaborador', 'gestor', 'viagens', 'faturamento', 'coordenadora', 'gerencia', 'financeiro', 'administrador', 'auditoria'];
-    const parts = token.split('_');
-
-    let userId = 'USR-001';
+    const VALID_ROLES = ['COLABORADOR', 'AGENTE_SERVICO', 'GESTOR_APROVADOR', 'ADMINISTRADOR', 'colaborador', 'gestor', 'operador', 'coordenacao', 'viagens', 'transportes', 'faturamento', 'coordenadora', 'gerencia', 'financeiro', 'administrador', 'auditoria'];
+    let userId: string;
     let role = 'colaborador';
-
-    if (parts.length >= 5) {
-      // Formato novo: parts[3] = userId, parts[4] = role, parts[5+] = timestamp
-      userId = parts[3] || 'USR-001';
-      const potentialRole = parts[4];
-      role = VALID_ROLES.includes(potentialRole) ? potentialRole : 'colaborador';
-    } else if (parts.length === 4) {
-      // Formato legado: parts[3] = userId, parts[4] = timestamp
-      userId = parts[3] || 'USR-001';
-      role = 'colaborador';
+    const currentFormat = token.match(/^mock_jwt_token_([^_]+)_(.+)_(\d+)$/);
+    const legacyFormat = token.match(/^mock_jwt_token_([^_]+)_(\d+)$/);
+    if (currentFormat) {
+      userId = currentFormat[1];
+      role = VALID_ROLES.includes(currentFormat[2]) ? currentFormat[2] : 'colaborador';
+    } else if (legacyFormat) {
+      userId = legacyFormat[1];
+    } else {
+      throw new UnauthorizedError('Token inválido');
     }
 
+    // Lookup real user from repository to get correct email/name
+    const repoUser = await userRepository.findById(userId);
+    if (repoUser?.accessStatus === 'DESATIVADO') throw new UnauthorizedError('Acesso à Central 360 desativado');
+    const normalized = normalizeLegacyRole(repoUser?.role || role);
     const mockUser: AuthUser = {
       id: userId,
-      email: 'colaborador@ficticio.org',
-      role: role,
-      name: 'Usuário Simulado'
+      email: repoUser?.email || 'colaborador@ficticio.org',
+      role: normalized.role,
+      serviceScopes: (repoUser?.serviceScopes || normalized.serviceScopes) as ServiceScope[],
+      approvalScopes: repoUser?.approvalScopes || (normalized.role === 'ADMINISTRADOR' ? ['ALL'] : normalized.role === 'GESTOR_APROVADOR' ? ['DEMO_ALL'] : []),
+      name: repoUser?.name || 'Usuário Simulado'
+      ,employeeId: `MAT-${userId}`
+      ,department: repoUser?.department || 'Área Demonstrativa'
+      ,costCenter: repoUser?.costCenter || 'CC-DEMO-01'
     };
 
     req.user = mockUser;
@@ -110,10 +129,21 @@ export function authorize(...allowedRoles: string[]) {
       throw new UnauthorizedError('Usuário não autenticado');
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const allowedCanonical = allowedRoles.map(role => normalizeLegacyRole(role).role);
+    if (!allowedCanonical.includes(req.user.role as AuthorizedRole)) {
       throw new ForbiddenError('Perfil de usuário não autorizado para esta ação');
     }
 
+    next();
+  };
+}
+
+export function authorizeService(service: ServiceFront) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user) throw new UnauthorizedError('Usuário não autenticado');
+    if (req.user.role !== 'ADMINISTRADOR' && !hasServiceScope({ role: req.user.role as AuthorizedRole, serviceScopes: req.user.serviceScopes }, service)) {
+      throw new ForbiddenError('Vertical fora dos serviceScopes autorizados');
+    }
     next();
   };
 }

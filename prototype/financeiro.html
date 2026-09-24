@@ -3,34 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Financeiro & Custos</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="financeiro">
   <div id="app-layout-root">
     <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+      <!-- Header -->
+      <div class="dashboard-header">
         <div>
-          <h1 class="page-title">Financeiro & Consolidação de Custos (RN-FIN)</h1>
-          <p class="page-subtitle">Consolidação por Centro de Custo e pré-carga simulada para SAP/Senior.</p>
+          <h1 style="font-size:1.375rem;font-weight:700;color:var(--text-primary);margin:0;">Financeiro & Consolidação de Custos</h1>
+          <p style="font-size:0.8rem;color:var(--text-secondary);margin:2px 0 0 0;">Consolidação de custos e pré-carga demonstrativa para ERP.</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge-demo" style="font-size:0.65rem;">RBAC: <span id="fin-rbac-role">—</span></span>
+          <button class="btn btn-secondary btn-sm" id="btn-financeiro-export" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar dados
+          </button>
         </div>
       </div>
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Código CC</th>
-              <th>Nome Centro de Custo</th>
-              <th>Gestor Responsável</th>
-              <th>Volume de Solicitações</th>
-              <th>Status Conciliação</th>
-            </tr>
-          </thead>
-          <tbody id="fin-cost-centers-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#eff6ff;color:#2563eb;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Total período</span>
+            <span class="kpi-value" id="fin-kpi-total">—</span>
+            <span class="kpi-change" style="color:var(--success);" id="fin-kpi-total-change"></span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#f0fdf4;color:#059669;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Média por solicitação</span>
+            <span class="kpi-value" id="fin-kpi-media">—</span>
+            <span class="kpi-change" style="color:var(--danger);" id="fin-kpi-media-change"></span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#faf5ff;color:#9333ea;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Solicitações período</span>
+            <span class="kpi-value" id="fin-kpi-solicitacoes">—</span>
+            <span class="kpi-change" style="color:var(--success);" id="fin-kpi-solicitacoes-change"></span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#fef2f2;color:#dc2626;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Pendências conciliação</span>
+            <span class="kpi-value" id="fin-kpi-pendencias" style="color:var(--danger);">—</span>
+            <span class="kpi-change" id="fin-kpi-pendencias-change" style="color:var(--text-muted);"></span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#fff7ed;color:#ea580c;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">% orçamento utilizado</span>
+            <span class="kpi-value" id="fin-kpi-orcamento">—</span>
+            <span class="kpi-change" style="color:var(--text-muted);" id="fin-kpi-orcamento-change"></span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#f0fdf4;color:#059669;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Economia gerada</span>
+            <span class="kpi-value" id="fin-kpi-economia">—</span>
+            <span class="kpi-change" style="color:var(--success);" id="fin-kpi-economia-change"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Principal: 2 colunas -->
+      <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+        <!-- Coluna Esquerda: Gráficos e tabela -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Evolução Mensal -->
+          <div class="panel">
+            <div class="panel-header fin-evolution-header">
+              <div><span class="panel-title">Evolução mensal de despesas</span><span class="fin-scope-label">Escopo do gráfico</span></div>
+              <div id="fin-scope-control"></div>
+            </div>
+            <div class="panel-body">
+              <div id="fin-chart-evolucao" style="height:200px;"></div>
+              <div id="fin-chart-scope-context" class="fin-chart-scope-context" aria-live="polite"></div>
+              <div style="text-align:right;font-size:0.6rem;color:var(--text-muted);margin-top:4px;">Valores simulados — não representam dados reais</div>
+            </div>
+          </div>
+
+          <!-- Tabela de Centros de Custo -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Consolidação por Centro de Custo</span>
+              <span style="font-size:0.7rem;color:var(--text-muted);" id="fin-cc-counter"></span>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Código CC</th>
+                    <th>Nome</th>
+                    <th>Gestor</th>
+                    <th>Gasto Total</th>
+                    <th>Solicitações</th>
+                    <th>Média/Solic.</th>
+                    <th>Frente Principal</th>
+                    <th>Conciliação</th>
+                  </tr>
+                </thead>
+                <tbody id="fin-cc-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Alertas e Pendências -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Alertas e pendências financeiras</span>
+              <span style="background:var(--danger);color:#fff;font-size:0.65rem;padding:2px 8px;border-radius:var(--radius-full);font-weight:600;" id="fin-alert-count">0</span>
+            </div>
+            <div class="panel-body" style="padding:0;" id="fin-alerts-container"></div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Gastos por frente + conciliação + ações -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Gastos por Frente -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Gastos por frente</span>
+            </div>
+            <div class="panel-body">
+              <div id="fin-chart-frentes"></div>
+            </div>
+          </div>
+
+          <!-- Conciliação -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Conciliação mensal</span>
+            </div>
+            <div class="panel-body">
+              <div id="fin-conciliacao-info"></div>
+            </div>
+          </div>
+
+          <!-- Ações de Exportação -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Exportação de dados</span>
+            </div>
+            <div class="panel-body">
+              <div id="fin-export-options"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nota Rodapé -->
+      <div style="text-align:center;padding:16px;margin-top:8px;border-top:1px solid var(--border);">
+        <p style="font-size:0.7rem;color:var(--text-muted);margin:0;">Todos os valores são demonstrativos (sim.). Dados fictícios para validação de layout e RBAC. Integração com ERP pendente de validação técnica.</p>
       </div>
     </main>
   </div>
@@ -38,5 +198,504 @@
   <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/api-client.js"></script>
   <script src="assets/js/app.js"></script>
+  <script>
+    // ============================================================
+    // FINANCEIRO - API-first com fallback para mock
+    // ============================================================
+    // Agregação: KPIs derivados de granularidade única.
+    // gastoTotal = Σ(CC gastos) = Σ(frentes valores)
+    // gastoMedio = gastoTotal / solicitacoes
+    // percentualGasto = gastoTotal / orcamento * 100
+    // ============================================================
+
+    function escapeHTML(str) {
+      if (typeof str !== 'string') return str;
+      return str.replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m];
+      });
+    }
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value !== undefined && value !== null ? value : '';
+    }
+
+    // ============================================================
+    // FUNÇÃO DE AGREGAÇÃO ÚNICA
+    // ============================================================
+    // Deriva todos os KPIs a partir dos dados granulares.
+    // Garante consistência matemática.
+    function aggregateFinanceiro(costCenters, conciliation, alerts) {
+      // 1. Calcular totais a partir dos centros de custo
+      const gastoTotal = costCenters.reduce((sum, cc) => sum + (cc.gastoTotal || cc.totalEstimatedCost || 0), 0);
+      const totalSolicitacoes = costCenters.reduce((sum, cc) => sum + (cc.solicitacoes || cc.requestCount || 0), 0);
+      const totalPendencias = costCenters.reduce((sum, cc) => sum + (cc.pendingApprovals || 0), 0);
+
+      // 2. Média por solicitação
+      const gastoMedio = totalSolicitacoes > 0 ? gastoTotal / totalSolicitacoes : 0;
+
+      // 3. Orçamento (demonstrativo)
+      const orcamento = 427000;
+      const percentualGasto = orcamento > 0 ? (gastoTotal / orcamento * 100) : 0;
+
+      // 4. Conciliação
+      const concPendentes = conciliation ? conciliation.pendingItems : totalPendencias;
+      const concTotal = conciliation ? conciliation.totalProcessed : totalSolicitacoes;
+      const concPercentual = concTotal > 0 ? ((concTotal - concPendentes) / concTotal * 100) : 0;
+
+      // 5. Economia (demonstrativo — 5% do total como referência)
+      const economia = Math.round(gastoTotal * 0.05);
+
+      return {
+        kpis: {
+          gastoTotal,
+          gastoMedio,
+          solicitacoes: totalSolicitacoes,
+          pendencias: concPendentes,
+          percentualGasto: Math.round(percentualGasto * 10) / 10,
+          economia
+        },
+        orcamento,
+        conciliacao: conciliation ? {
+          totalRegistros: concTotal,
+          conciliados: concTotal - concPendentes,
+          pendentes: concPendentes,
+          divergencias: conciliation.errors || 0,
+          percentual: Math.round(concPercentual * 10) / 10,
+          ultimaConciliacao: conciliation.lastSync || '—'
+        } : null,
+        alerts: alerts || []
+      };
+    }
+
+    // ============================================================
+    // RENDERIZAÇÃO A partir de dados agregados
+    // ============================================================
+    function renderKPIs(agg) {
+      const k = agg.kpis;
+      setText('fin-kpi-total', `R$ ${k.gastoTotal.toLocaleString('pt-BR')} sim.`);
+      setText('fin-kpi-total-change', 'somatório dos centros de custo');
+      setText('fin-kpi-media', `R$ ${k.gastoMedio.toLocaleString('pt-BR', {minimumFractionDigits:2})} sim.`);
+      setText('fin-kpi-media-change', 'gastoTotal / solicitações');
+      setText('fin-kpi-solicitacoes', k.solicitacoes);
+      setText('fin-kpi-solicitacoes-change', 'total período');
+      setText('fin-kpi-pendencias', k.pendencias);
+      setText('fin-kpi-pendencias-change', k.pendencias > 0 ? 'aguardando conciliação' : 'nenhuma pendência');
+      setText('fin-kpi-orcamento', `${k.percentualGasto}%`);
+      setText('fin-kpi-orcamento-change', `Orçamento: R$ ${agg.orcamento.toLocaleString('pt-BR')} sim.`);
+      setText('fin-kpi-economia', `R$ ${k.economia.toLocaleString('pt-BR')} sim.`);
+      setText('fin-kpi-economia-change', 'referência demonstrativa');
+    }
+
+    function renderCCTable(costCenters) {
+      const tbody = document.getElementById('fin-cc-tbody');
+      const counter = document.getElementById('fin-cc-counter');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      counter.textContent = `${costCenters.length} centro(s) de custo`;
+      costCenters.forEach(cc => {
+        const gasto = cc.gastoTotal || cc.totalEstimatedCost || 0;
+        const sols = cc.solicitacoes || cc.requestCount || 0;
+        const media = sols > 0 ? gasto / sols : 0;
+        const code = cc.code || cc.costCenter?.code || '—';
+        const name = cc.name || cc.costCenter?.name || '—';
+        const manager = cc.manager || cc.costCenter?.manager || '—';
+        const frente = cc.frentePrincipal || '—';
+        const conciliado = (cc.statusConciliacao === 'Conciliado' || cc.status === 'Ativo');
+        const concClass = conciliado ? 'status-APROVADO' : 'status-PENDENTE_APROVACAO';
+        const concText = conciliado ? 'Conciliado' : 'Pendente';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(code)}</strong></td>
+          <td>${escapeHTML(name)}</td>
+          <td>${escapeHTML(manager)}</td>
+          <td><strong>R$ ${gasto.toLocaleString('pt-BR')} <span style="font-size:0.6rem;color:var(--text-muted);">sim.</span></strong></td>
+          <td>${sols}</td>
+          <td>R$ ${media.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+          <td>${escapeHTML(frente)}</td>
+          <td><span class="status-badge ${concClass}" style="font-size:0.65rem;">${concText}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAlerts(alerts) {
+      const container = document.getElementById('fin-alerts-container');
+      const badge = document.getElementById('fin-alert-count');
+      if (!container) return;
+      badge.textContent = alerts.length;
+      if (alerts.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:0.75rem;">Nenhum alerta ativo.</div>';
+        return;
+      }
+      container.innerHTML = '';
+      alerts.forEach(a => {
+        const priClass = (a.severity === 'alta' || a.prioridade === 'alta') ? 'status-PENDENTE_APROVACAO' : 'status-EM_ATENDIMENTO';
+        const priIcon = (a.type || a.tipo) === 'divergencia' ? '⚠️' : ((a.type || a.tipo) === 'prazo' ? '⏰' : '📋');
+        const titulo = a.titulo || a.message || '—';
+        const desc = a.descricao || '';
+        const data = a.data || a.timestamp || '';
+        const pri = a.prioridade || a.severity || '—';
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-light);';
+        item.innerHTML = `
+          <span style="font-size:1.1rem;">${priIcon}</span>
+          <div style="flex:1;">
+            <div style="font-weight:700;color:var(--text-primary);margin-bottom:2px;">${escapeHTML(titulo)}</div>
+            ${desc ? `<div style="font-size:0.75rem;color:var(--text-secondary);">${escapeHTML(desc)}</div>` : ''}
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <span class="status-badge ${priClass}" style="font-size:0.6rem;">${escapeHTML(pri)}</span>
+              ${data ? `<span style="font-size:0.6rem;color:var(--text-muted);">${escapeHTML(data)}</span>` : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function renderConciliacao(conc) {
+      const container = document.getElementById('fin-conciliacao-info');
+      if (!container || !conc) return;
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div style="text-align:center;">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${conc.totalRegistros}</div>
+            <div style="font-size:0.7rem;color:var(--text-secondary);">Total registros</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--success);">${conc.conciliados}</div>
+            <div style="font-size:0.7rem;color:var(--text-secondary);">Conciliados</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--danger);">${conc.pendentes}</div>
+            <div style="font-size:0.7rem;color:var(--text-secondary);">Pendentes</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--warning);">${conc.divergencias}</div>
+            <div style="font-size:0.7rem;color:var(--text-secondary);">Divergências</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-bottom:8px;">
+          <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);">${conc.percentual}% conciliado</div>
+          <div style="height:8px;background:var(--border-light);border-radius:4px;overflow:hidden;margin-top:4px;">
+            <div style="height:100%;width:${conc.percentual}%;background:${conc.percentual >= 90 ? 'var(--success)' : 'var(--warning)'};border-radius:4px;"></div>
+          </div>
+        </div>
+        <div style="font-size:0.65rem;color:var(--text-muted);text-align:center;">Última conciliação: ${conc.ultimaConciliacao} sim.</div>
+      `;
+    }
+
+    function renderFrentes(costCenters) {
+      const container = document.getElementById('fin-chart-frentes');
+      if (!container) return;
+      // Derivar frentes a partir dos dados de CC (ou usar mock como fallback visual)
+      const mock = window.CS360_INITIAL_MOCK?.financeiro?.gastosPorFrente;
+      // Se temos CCs da API, recalcular por frente principal
+      const frenteMap = {};
+      costCenters.forEach(cc => {
+        const frente = cc.frentePrincipal || 'Outros';
+        const gasto = cc.gastoTotal || cc.totalEstimatedCost || 0;
+        frenteMap[frente] = (frenteMap[frente] || 0) + gasto;
+      });
+      const totalGasto = Object.values(frenteMap).reduce((a, b) => a + b, 0);
+      const colors = { Viagens: '#2563eb', Mobilidade: '#0ea5e9', Correios: '#8b5cf6', Xerox: '#f59e0b', Outros: '#6b7280' };
+      const frentes = Object.entries(frenteMap).map(([name, value]) => ({
+        name,
+        value,
+        percent: totalGasto > 0 ? Math.round(value / totalGasto * 1000) / 10 : 0,
+        color: colors[name] || '#6b7280'
+      }));
+      container.innerHTML = frentes.map(f => `
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:0.75rem;color:var(--text-secondary);">${escapeHTML(f.name)}</span>
+            <span style="font-size:0.75rem;font-weight:600;color:var(--text-primary);">R$ ${f.value.toLocaleString('pt-BR')} <span style="font-size:0.6rem;color:var(--text-muted);">sim.</span></span>
+          </div>
+          <div style="height:20px;background:var(--border-light);border-radius:var(--radius-sm);overflow:hidden;">
+            <div style="height:100%;width:${f.percent}%;background:${f.color};border-radius:var(--radius-sm);transition:width 0.3s;"></div>
+          </div>
+          <div style="text-align:right;font-size:0.65rem;color:var(--text-muted);margin-top:2px;">${f.percent}% do total</div>
+        </div>
+      `).join('');
+    }
+
+    let evolutionCostCenters = [], selectedEvolutionCC = 'consolidado';
+    const evolutionCode = cc => cc.code || cc.costCenter?.code || '';
+    const evolutionName = cc => cc.name || cc.costCenter?.name || '';
+    const evolutionTotal = cc => cc.gastoTotal || cc.totalEstimatedCost || 0;
+
+    function drawEvolucao() {
+      const chart = document.getElementById('fin-chart-evolucao');
+      if (!chart) return;
+      const em = window.CS360_INITIAL_MOCK?.financeiro?.evolucaoMensal;
+      if (!em) return;
+      const { months, viagens, mobilidade, correios, xerox } = em;
+      const baseTotals = months.map((_, i) => viagens[i] + mobilidade[i] + correios[i] + xerox[i]);
+      const selected = evolutionCostCenters.find(cc => evolutionCode(cc) === selectedEvolutionCC);
+      const allTotal = evolutionCostCenters.reduce((sum, cc) => sum + evolutionTotal(cc), 0);
+      const totals = selected ? baseTotals.map(value => Math.round(value * (allTotal ? evolutionTotal(selected) / allTotal : 0))) : baseTotals;
+      const context = document.getElementById('fin-chart-scope-context');
+      if (!totals.some(Boolean)) {
+        chart.innerHTML = '<div class="fin-chart-empty">Sem movimentação demonstrativa para este centro de custo no período.</div>';
+        if (context) context.textContent = selected ? `${evolutionCode(selected)} · ${evolutionName(selected)}` : '';
+        return;
+      }
+      const maxVal = Math.max(...totals, 1);
+      const w = chart.offsetWidth || 500;
+      const h = 180;
+      const padX = 50;
+      const padY = 16;
+      const chartW = w - padX * 2;
+      const chartH = h - padY * 2;
+      function toLine(arr) {
+        return arr.map((v, i) => {
+          const x = padX + (i / (months.length - 1)) * chartW;
+          const y = padY + chartH - (v / maxVal) * chartH;
+          return `${x},${y}`;
+        }).join(' ');
+      }
+      chart.innerHTML = `
+        <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}">
+          <defs>
+            <linearGradient id="finGradViagens" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563eb" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          ${[0, 0.25, 0.5, 0.75, 1].map(p => {
+            const y = padY + chartH * (1 - p);
+            const val = Math.round(maxVal * p);
+            return `<line x1="${padX}" y1="${y}" x2="${w - padX}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+                    <text x="${padX - 8}" y="${y + 4}" text-anchor="end" fill="var(--text-muted)" font-size="9">${(val/1000).toFixed(0)}k</text>`;
+          }).join('')}
+          ${months.map((m, i) => {
+            const x = padX + (i / (months.length - 1)) * chartW;
+            return `<text x="${x}" y="${h - 2}" text-anchor="middle" fill="var(--text-muted)" font-size="9">${m}</text>`;
+          }).join('')}
+          <polyline points="${toLine(totals)}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          ${totals.map((v, i) => {
+            const x = padX + (i / (months.length - 1)) * chartW;
+            const y = padY + chartH - (v / maxVal) * chartH;
+            return `<circle cx="${x}" cy="${y}" r="3" fill="var(--bg-surface)" stroke="#2563eb" stroke-width="2"/>`;
+          }).join('')}
+        </svg>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:4px;">
+          <span style="font-size:0.65rem;display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:#2563eb;display:inline-block;"></span> ${selected ? escapeHTML(evolutionCode(selected)) : 'Total consolidado'}</span>
+          <span style="font-size:0.65rem;color:var(--text-muted);">Valores mensais demonstrativos</span>
+        </div>
+      `;
+      if (context) context.textContent = selected ? 'Exibindo dados demonstrativos de 1 centro de custo.' : `Exibindo dados demonstrativos de ${evolutionCostCenters.length} centros de custo.`;
+    }
+
+    function setupEvolutionScope(costCenters, role) {
+      evolutionCostCenters = costCenters;
+      const host = document.getElementById('fin-scope-control');
+      if (!host) return;
+      if (role === 'gestor') {
+        const own = costCenters[0]; selectedEvolutionCC = own ? evolutionCode(own) : '';
+        host.innerHTML = `<div class="fin-scope-fixed"><span>Meu centro de custo</span><strong>${own ? `${escapeHTML(evolutionCode(own))} · ${escapeHTML(evolutionName(own))}` : 'Nenhum centro disponível'}</strong></div>`;
+        drawEvolucao(); return;
+      }
+      selectedEvolutionCC = 'consolidado';
+      host.innerHTML = `<div class="fin-scope-combobox"><button type="button" class="fin-scope-trigger" id="fin-scope-trigger" aria-expanded="false" aria-controls="fin-scope-menu" aria-haspopup="listbox"><span>Consolidado · Todos os centros de custo</span><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button><div class="fin-scope-menu" id="fin-scope-menu" hidden><div class="fin-scope-search-wrap"><input id="fin-scope-search" type="search" autocomplete="off" placeholder="Buscar centro de custo..." aria-label="Buscar centro de custo"></div><div class="fin-scope-options" id="fin-scope-options" role="listbox" aria-label="Escopo do gráfico"></div></div></div>`;
+      const trigger = document.getElementById('fin-scope-trigger'), menu = document.getElementById('fin-scope-menu'), search = document.getElementById('fin-scope-search'), options = document.getElementById('fin-scope-options');
+      let activeIndex = -1;
+      function renderOptions(query = '') {
+        const term = query.trim().toLocaleLowerCase('pt-BR');
+        const filtered = costCenters.filter(cc => `${evolutionCode(cc)} ${evolutionName(cc)}`.toLocaleLowerCase('pt-BR').includes(term));
+        const option = (value, title, subtitle) => `<button type="button" class="fin-scope-option${selectedEvolutionCC === value ? ' is-selected' : ''}" role="option" aria-selected="${selectedEvolutionCC === value}" data-value="${escapeHTML(value)}"><span class="fin-option-check">✓</span><span><strong>${escapeHTML(title)}</strong><small>${escapeHTML(subtitle)}</small></span></button>`;
+        options.innerHTML = option('consolidado', 'Consolidado', 'Todos os centros de custo') + '<div class="fin-scope-divider"></div>' + (filtered.length ? filtered.map(cc => option(evolutionCode(cc), evolutionCode(cc), evolutionName(cc))).join('') : '<div class="fin-scope-empty">Nenhum centro de custo encontrado.</div>');
+      }
+      function openMenu(open) { menu.hidden = !open; trigger.setAttribute('aria-expanded', String(open)); if (open) { renderOptions(search.value); setTimeout(() => search.focus(), 0); } }
+      function choose(value) {
+        if (value !== 'consolidado' && !costCenters.some(cc => evolutionCode(cc) === value)) return;
+        selectedEvolutionCC = value; const cc = costCenters.find(item => evolutionCode(item) === value);
+        trigger.querySelector('span').textContent = cc ? `${evolutionCode(cc)} · ${evolutionName(cc)}` : 'Consolidado · Todos os centros de custo';
+        openMenu(false); drawEvolucao(); trigger.focus();
+      }
+      trigger.addEventListener('click', () => openMenu(menu.hidden));
+      trigger.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); openMenu(true); } });
+      search.addEventListener('input', () => { renderOptions(search.value); activeIndex = -1; });
+      menu.addEventListener('click', e => { const item = e.target.closest('[data-value]'); if (item) choose(item.dataset.value); });
+      menu.addEventListener('keydown', e => { if (e.key === 'Escape') { openMenu(false); trigger.focus(); return; } const items = [...options.querySelectorAll('[data-value]')]; if (e.key === 'Enter' && document.activeElement?.dataset?.value) choose(document.activeElement.dataset.value); if (['ArrowDown','ArrowUp'].includes(e.key) && items.length) { e.preventDefault(); activeIndex = Math.max(0, Math.min(items.length - 1, activeIndex + (e.key === 'ArrowDown' ? 1 : -1))); items[activeIndex].focus(); } });
+      document.addEventListener('click', e => { if (!host.contains(e.target)) openMenu(false); });
+      renderOptions(); drawEvolucao();
+    }
+
+    function renderExportacao() {
+      const container = document.getElementById('fin-export-options');
+      if (!container) return;
+      const e = window.CS360_INITIAL_MOCK?.financeiro?.exportacao;
+      if (!e) return;
+      container.innerHTML = `
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.7rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Formato</label>
+          <select id="fin-export-formato" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--text-primary);background:var(--surface);">
+            ${e.formatos.map(f => `<option value="${f}">${f}</option>`).join('')}
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.7rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Período</label>
+          <select id="fin-export-periodo" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--text-primary);background:var(--surface);">
+            ${e.periodos.map(p => `<option value="${p}">${p}</option>`).join('')}
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.7rem;color:var(--text-secondary);display:block;margin-bottom:4px;">Centro de Custo</label>
+          <select id="fin-export-cc" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--text-primary);background:var(--surface);">
+            ${e.centrosCusto.map(c => `<option value="${c}">${c}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn btn-primary" id="fin-btn-exportar" style="width:100%;padding:8px;font-size:0.8rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Gerar exportação (sim.)
+        </button>
+        <div style="text-align:center;font-size:0.6rem;color:var(--text-muted);margin-top:8px;">A exportação gera um arquivo demonstrativo para validação do layout.</div>
+      `;
+      document.getElementById('fin-btn-exportar').addEventListener('click', function() {
+        const fmt = document.getElementById('fin-export-formato').value;
+        const per = document.getElementById('fin-export-periodo').value;
+        const cc = document.getElementById('fin-export-cc').value;
+
+        const csvContent = "\uFEFF" + [
+          "Centro de Custo;Descricao;Viagens (R$);Mobilidade (R$);Correios (R$);Xerox (R$);Total (R$);Status",
+          "CC-3021;UTI Geral Adulto;14200.00;3120.00;890.00;1450.00;19660.00;Conciliado",
+          "CC-1040;Diretoria Medica;18900.00;1250.00;450.00;890.00;21490.00;Conciliado",
+          "CC-2055;Infraestrutura;6400.00;4800.00;1200.00;2300.00;14700.00;Conciliado",
+          "CC-4010;Centro Cirurgico;9500.00;2100.00;620.00;1100.00;13320.00;Conciliado",
+          "CC-5020;Oncologia Clinica;8100.00;1890.00;380.00;950.00;11320.00;Pendente",
+          "CC-6015;Pronto Atendimento;7200.00;2600.00;510.00;780.00;11090.00;Conciliado",
+          "CC-7080;Pesquisa Clinica IEP;12400.00;980.00;1450.00;620.00;15450.00;Conciliado"
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Central360_Financeiro_${cc.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        alert('Exportação financeira gerada com sucesso!\n\nFormato: ' + fmt + '\nPeríodo: ' + per + '\nCentro de Custo: ' + cc + '\n\nO arquivo CSV foi salvo no seu computador.');
+      });
+    }
+
+    // ============================================================
+    // FLUXO PRINCIPAL: API-first → mock fallback
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+      const RBAC = window.CS360RBAC;
+      const API = window.CS360API;
+      const role = RBAC?.getUserRole?.() || API?.getActiveRole?.() || 'colaborador';
+      const isOnline = API && typeof API.getCostCenters === 'function' && navigator.onLine;
+
+      setText('fin-rbac-role', role || '—');
+
+      // Exibir botão de exportação apenas para financeiro/administrador
+      const exportBtn = document.getElementById('btn-financeiro-export');
+      if (exportBtn) {
+        const canExport = role === 'financeiro' || role === 'administrador';
+        exportBtn.style.display = canExport ? 'inline-flex' : 'none';
+      }
+
+      // RBAC gate
+      if (RBAC && typeof RBAC.canViewFinanceiro === 'function' && !RBAC.canViewFinanceiro()) {
+        document.getElementById('page-content-slot').innerHTML = `
+          <div class="dashboard-header">
+            <div>
+              <h1 style="font-size:1.375rem;font-weight:700;color:var(--text-primary);margin:0;">Financeiro & Consolidação de Custos</h1>
+              <p style="font-size:0.8rem;color:var(--text-secondary);margin:2px 0 0 0;">Consolidação de custos e pré-carga demonstrativa para ERP.</p>
+            </div>
+          </div>
+          <div class="panel" style="max-width:560px;margin:48px auto;text-align:center;">
+            <div class="panel-body" style="padding:32px;">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--danger);margin-bottom:16px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <h2 style="font-size:1.125rem;font-weight:700;color:var(--text-primary);margin:0 0 8px 0;">Acesso Restrito</h2>
+              <p style="font-size:0.85rem;color:var(--text-secondary);margin:0 0 20px 0;line-height:1.5;">Seu perfil não possui acesso à visão financeira consolidada.<br>Esta funcionalidade está disponível apenas para perfis autorizados, conforme o escopo de acesso definido.</p>
+              <a href="solicitacoes.html" class="btn btn-primary" style="text-decoration:none;">Voltar para Minhas Solicitações</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // --- DADOS ---
+      let costCenters = [];
+      let conciliation = null;
+      let alerts = [];
+      let dataSource = 'mock';
+
+      if (isOnline) {
+        try {
+          const [ccResult, concResult, alertsResult] = await Promise.allSettled([
+            API.getCostCenters(),
+            API.getConciliation(),
+            API.getAlerts()
+          ]);
+
+          if (ccResult.status === 'fulfilled' && ccResult.value?.success) {
+            costCenters = ccResult.value.data || [];
+            dataSource = 'api';
+          }
+          if (concResult.status === 'fulfilled' && concResult.value?.success) {
+            conciliation = concResult.value.data;
+          }
+          if (alertsResult.status === 'fulfilled' && alertsResult.value?.success) {
+            alerts = alertsResult.value.data || [];
+          }
+        } catch (e) {
+          console.warn('API fetch failed, falling back to mock:', e);
+        }
+      }
+
+      // Fallback para mock
+      if (dataSource === 'mock') {
+        const mock = window.CS360_INITIAL_MOCK?.financeiro;
+        if (mock) {
+          costCenters = mock.centrosCusto || [];
+          conciliation = mock.conciliacao ? {
+            lastSync: mock.conciliacao.ultimaConciliacao,
+            status: 'Concluído',
+            pendingItems: mock.conciliacao.pendentes,
+            totalProcessed: mock.conciliacao.totalRegistros,
+            errors: mock.conciliacao.divergencias,
+            scope: 'Consolidado'
+          } : null;
+          alerts = mock.alertas || [];
+        }
+      }
+
+      // No modo demonstrativo offline, reproduzir o mesmo escopo restrito do endpoint.
+      if (role === 'gestor' && dataSource === 'mock') {
+        const currentUser = API?.getCurrentUser?.();
+        const demoUser = currentUser || window.CS360_INITIAL_MOCK?.users?.find(user => user.role === 'gestor');
+        const ownCostCenter = demoUser?.costCenter;
+        costCenters = ownCostCenter ? costCenters.filter(cc => evolutionCode(cc) === ownCostCenter) : costCenters.slice(0, 1);
+      }
+
+      // --- AGREGAÇÃO ---
+      const agg = aggregateFinanceiro(costCenters, conciliation, alerts);
+
+      // --- RENDERIZAÇÃO ---
+      renderKPIs(agg);
+      renderCCTable(costCenters);
+      renderAlerts(alerts.length > 0 ? alerts : agg.alerts);
+      renderConciliacao(agg.conciliacao);
+      renderFrentes(costCenters);
+      renderExportacao();
+      setupEvolutionScope(costCenters, role);
+      window.addEventListener('resize', drawEvolucao);
+      window.addEventListener('themechange', drawEvolucao);
+
+      // Export button
+      if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+          const fmt = document.getElementById('fin-export-formato');
+          if (fmt) fmt.focus();
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -199,6 +199,13 @@ window.CS360API = (function () {
     return await request("GET", "/dashboard/metrics");
   }
 
+  async function getAdminUsers() { return await request("GET", "/admin/users"); }
+  async function getAdminUser(id) { return await request("GET", "/admin/users/" + encodeURIComponent(id)); }
+  async function createAdminUser(payload) { return await request("POST", "/admin/users", payload); }
+  async function updateAdminUserAccess(id, payload) { return await request("PATCH", "/admin/users/" + encodeURIComponent(id) + "/access", payload); }
+  async function updateAdminUserPermissions(id, payload) { return await request("PATCH", "/admin/users/" + encodeURIComponent(id) + "/permissions", payload); }
+  async function getAdminAudit() { return await request("GET", "/admin/audit"); }
+
   async function getStatusDistribution() {
     return await request("GET", "/dashboard/status-distribution");
   }
@@ -401,6 +408,12 @@ window.CS360API = (function () {
     getRequestHistory,
 
     getDashboardMetrics,
+    getAdminUsers,
+    getAdminUser,
+    createAdminUser,
+    updateAdminUserAccess,
+    updateAdminUserPermissions,
+    getAdminAudit,
     getStatusDistribution,
     getRecentQueue,
 

@@ -3,40 +3,313 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Mobilidade Urbana</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="mobilidade">
   <div id="app-layout-root">
-    <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+    <main class="page-content mobility-page" id="page-content-slot">
+      <!-- Cabeçalho com Ação Alinhada -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
         <div>
-          <h1 class="page-title">Mobilidade Urbana (RN-MOB)</h1>
-          <p class="page-subtitle">Gestão de acessos Uber for Business / Táxi e conferência de corridas.</p>
+          <h1 class="page-title">Mobilidade Urbana</h1>
+          <p class="page-subtitle">Acessos, corridas, despesas e exceções de mobilidade corporativa.</p>
         </div>
-        <div>
-          <a href="solicitacao-nova.html" class="btn btn-primary">🚗 Solicitar Acesso / Ajuste de Limite</a>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html?type=mobilidade" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">🚗 Solicitar Acesso / Ajuste de Limite</a>
         </div>
       </div>
 
-      <!-- Tabela de Corridas Realizadas -->
-      <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Corridas Recentes & Sinalização de Política (RN-MOB-002)</h2>
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Corrida</th>
-              <th>Passageiro Fictício</th>
-              <th>Data / Hora</th>
-              <th>Origem ➔ Destino</th>
-              <th>Valor (R$)</th>
-              <th>Status de Política</th>
-            </tr>
-          </thead>
-          <tbody id="rides-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
+      <!-- Faixa de 6 KPIs Compactos Derivados da Fonte Única -->
+      <div class="kpi-mini-grid grid-6-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">👥</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Usuários Ativos</span>
+            <span class="kpi-mini-val" id="kpi-mob-usuarios">18 sim.</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">🚗</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Corridas no Período</span>
+            <span class="kpi-mini-val" id="kpi-mob-corridas">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">💰</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Gasto Demonstrativo</span>
+            <span class="kpi-mini-val" id="kpi-mob-gasto" style="font-size: 0.95rem;">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Solicitações de Acesso</span>
+            <span class="kpi-mini-val" id="kpi-mob-acessos">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--danger-bg); color: var(--danger);">⚠️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Exceções de Política</span>
+            <span class="kpi-mini-val" id="kpi-mob-excecoes">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">🔄</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Correções de CC</span>
+            <span class="kpi-mini-val" id="kpi-mob-correcoes">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composição Principal em 2 Colunas -->
+      <div class="form-layout-grid mobility-main-grid">
+        <!-- Coluna Esquerda: Gráfico de Volume, Corridas Recentes e Acessos -->
+        <div class="form-main-col mobility-table-column">
+          <!-- Callout Compacto RN-MOB-002 -->
+          <div class="alert-box alert-info" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.25rem;">🚗</span>
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Sinalização Demonstrativa de Exceções (RN-MOB-002)</strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Corridas fora do horário regular ou desvinculadas de viagens ativas são sinalizadas para conferência prévia do faturamento.</div>
+              </div>
+            </div>
+            <span class="badge-demo">Demonstrativo</span>
+          </div>
+
+          <!-- Gráfico Local de Evolução de Corridas -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📈 Volume de Corridas por Dia — Demonstrativo</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Últimos 7 dias (simulado)</span>
+            </div>
+            <div class="panel-body" style="padding: 16px;">
+              <div style="height: 140px; width: 100%; display: flex; align-items: flex-end; gap: 16px; padding-top: 10px; border-bottom: 1px solid var(--border-light); justify-content: space-around;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">2</span>
+                  <div style="width: 100%; max-width: 32px; height: 40px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Seg</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">4</span>
+                  <div style="width: 100%; max-width: 32px; height: 75px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Ter</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">3</span>
+                  <div style="width: 100%; max-width: 32px; height: 58px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Qua</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">5</span>
+                  <div style="width: 100%; max-width: 32px; height: 95px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Qui</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">6</span>
+                  <div style="width: 100%; max-width: 32px; height: 110px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Sex</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">1</span>
+                  <div style="width: 100%; max-width: 32px; height: 25px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Sáb</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">1</span>
+                  <div style="width: 100%; max-width: 32px; height: 25px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Dom</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabela de Corridas Recentes -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🚖 Corridas Recentes & Conferência</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Uber for Business & Táxi Digital</span>
+            </div>
+            <div class="panel-body mobility-rides-panel-body" style="padding: 0;">
+              <div class="mobility-table-scroll">
+              <table class="data-table mobility-rides-table">
+                <thead>
+                  <tr>
+                    <th style="width: 110px;">ID Corrida</th>
+                    <th style="width: 160px;">Usuário Fictício</th>
+                    <th style="width: 140px;">Data / Hora</th>
+                    <th>Origem ➔ Destino</th>
+                    <th style="width: 120px;">Centro Custo</th>
+                    <th style="width: 100px;">Valor sim.</th>
+                    <th style="width: 150px;">Conformidade</th>
+                  </tr>
+                </thead>
+                <tbody id="rides-tbody">
+                  <!-- Renderizado pelo app.js -->
+                </tbody>
+              </table>
+              </div>
+              <div style="padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
+                <span id="rides-table-footer">Exibindo todas as corridas recentes (simuladas para validação)</span>
+                <span>Página 1 de 1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acessos e Ajustes de Limite -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔑 Acessos e Ajustes de Limite de Mobilidade</span>
+              <span class="badge-demo">Demonstrativo</span>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 130px;">ID Solicitação</th>
+                    <th>Usuário Fictício</th>
+                    <th style="width: 130px;">Perfil</th>
+                    <th style="width: 140px;">Limite Solicitado</th>
+                    <th style="width: 120px;">Status</th>
+                    <th style="width: 110px; text-align: right;">Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="mobility-access-tbody">
+                  <!-- Renderizado pelo app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Painel Lateral Operacional -->
+        <div class="form-side-col mobility-side-panel">
+          <!-- Gastos por Categoria -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📊 Gastos por Categoria</span>
+              <span class="badge-demo">Simulado</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Plantão Noturno / Assistencial</span>
+                  <strong style="color: var(--text-primary);">R$ 48,50 sim. (38,6%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 38.6%; background: var(--accent);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Deslocamentos Aeroporto</span>
+                  <strong style="color: var(--text-primary);">R$ 42,10 sim. (33,5%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 33.5%; background: var(--info);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Administrativo / Unidades</span>
+                  <strong style="color: var(--text-primary);">R$ 35,00 sim. (27,9%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 27.9%; background: var(--success);"></div>
+                </div>
+              </div>
+              <div style="padding-top: 8px; border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; font-size: var(--font-xs);">
+                <span style="color: var(--text-secondary);">Total Consolidado:</span>
+                <strong style="color: var(--success);" id="mob-total-side">R$ 125,60 sim.</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conformidade das Corridas -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🛡️ Conformidade das Corridas</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);" id="mob-conformity-rate">66.7% conforme</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--success);">●</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">Conforme Parâmetro</span>
+                </div>
+                <strong style="color: var(--text-primary);" id="mob-conform-count">2 corridas</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--danger);">●</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">Exceção Demonstrativa</span>
+                </div>
+                <strong style="color: var(--danger);" id="mob-exception-count">1 corrida</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Correções de Centro de Custo -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔄 Correções de Centro de Custo</span>
+            </div>
+            <div class="panel-body" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Ajustes Pendentes:</span>
+                <span class="status-badge status-PENDENTE_APROVACAO" style="font-size: 0.65rem;">1 pendente</span>
+              </div>
+              <div style="padding: 8px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); line-height: 1.4;">
+                <strong style="color: var(--text-primary);">RID-5501:</strong> Realocação solicitada de <span style="color: var(--text-primary); font-weight: 600;">CC-DEMO-01</span> para <span style="color: var(--text-primary); font-weight: 600;">CC-DEMO-03</span>.
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas e Pendências -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔔 Alertas e Pendências</span>
+              <span style="background: var(--danger); color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: var(--radius-full); font-weight: 700;">2</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⚠️</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Corrida em Horário Noturno</div>
+                  <div style="color: var(--text-secondary);">RID-5501 realizada às 22:45 requer validação no faturamento.</div>
+                  <span class="status-badge status-REJEITADO" style="font-size: 0.6rem; margin-top: 4px;">Atenção</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⏳</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Solicitação de Limite Mensal</div>
+                  <div style="color: var(--text-secondary);">MOB-REQ-001 aguarda parecer da coordenação.</div>
+                  <span class="status-badge status-PENDENTE_APROVACAO" style="font-size: 0.6rem; margin-top: 4px;">Pendente</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>

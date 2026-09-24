@@ -3,53 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Serviços 360 - Base de Conhecimento & Chatbot</title>
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Base de Conhecimento & Assistente</title>
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/secondary-pages.css">
 </head>
-<body data-page="conhecimento">
+<body data-page="conhecimento-secondary">
   <div id="app-layout-root">
-    <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+    <main class="page-content knowledge-page" id="page-content-slot">
+      <header class="kb-header">
         <div>
-          <h1 class="page-title">Base de Conhecimento & Assistente Demonstrativo</h1>
-          <p class="page-subtitle">Autoatendimento baseado em conteúdo fictício para validação do protótipo.</p>
+          <div class="eyebrow"><span class="demo-dot" aria-hidden="true"></span> Ambiente demonstrativo</div>
+          <h1 class="page-title">Base de Conhecimento &amp; Assistente</h1>
+          <p class="page-subtitle">Tire dúvidas e encontre orientações demonstrativas sobre os serviços da Central 360.</p>
         </div>
-      </div>
+        <span class="soft-badge kb-header-badge">Assistente sem IA generativa</span>
+      </header>
 
-      <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin-bottom: 20px;">
-        <p style="font-size: 0.85rem; color: #92400e;">⚠️ <strong>Conteúdo fictício para validação do protótipo.</strong> Não representa política ou documento institucional aprovado.</p>
-      </div>
+      <p class="kb-notice" role="note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        Conteúdo demonstrativo — não representa política institucional aprovada.
+      </p>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
-        <!-- Widget do Chatbot Determinístico -->
-        <div>
-          <div style="background-color: #e0f2fe; border-left: 4px solid #0284c7; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 0.85rem; color: #0369a1;">
-            ℹ️ <strong>Assistente demonstrativo sem IA generativa.</strong> Respostas ancoradas exclusivamente nos documentos oficiais cadastrados.
-          </div>
-
-          <div class="chat-container">
-            <div class="chat-messages" id="chat-messages-container">
-              <div class="chat-bubble bot">
-                Olá! Sou o Assistente da Central 360. Como posso ajudar com dúvidas sobre Viagens, Mobilidade, Correios ou Impressões?
-                <span class="chat-source-tag">📌 Assistente Demonstrativo</span>
+      <div class="kb-grid">
+        <!-- COLUNA ASSISTENTE -->
+        <section class="kb-assistant" aria-label="Assistente Central">
+          <div class="kb-chat">
+            <div class="kb-chat-head">
+              <div>
+                <h2>Assistente Central</h2>
+                <p>Respostas demonstrativas baseadas no conteúdo local.</p>
               </div>
             </div>
-
-            <div class="chat-input-area">
-              <input type="text" id="chat-input" class="form-control" placeholder="Digite sua pergunta (Ex: Como solicitar uma viagem?)...">
-              <button class="btn btn-primary" id="chat-btn-send">Enviar</button>
+            <div class="kb-chat-messages" id="kb-chat-messages" role="log" aria-live="polite" aria-label="Conversa com o Assistente Central"></div>
+            <div class="kb-chat-input-area">
+              <label class="sr-only" for="kb-chat-input">Digite sua dúvida</label>
+              <input type="text" id="kb-chat-input" autocomplete="off" placeholder="Digite sua dúvida…" aria-label="Digite sua dúvida">
+              <button type="button" class="btn btn-primary btn-sm" id="kb-chat-send">Enviar</button>
             </div>
+            <div class="kb-chat-foot">Conteúdo demonstrativo — não representa política institucional vigente.</div>
           </div>
-        </div>
+        </section>
 
-        <!-- Lista de Artigos Oficiais -->
-        <div>
-          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Conteúdo Normativo Demonstrativo</h2>
+        <!-- COLUNA CONHECIMENTO -->
+        <aside class="kb-knowledge" aria-label="Base de Conhecimento">
+          <section class="panel kb-base-panel" aria-labelledby="kb-base-title">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title" id="kb-base-title">Base de Conhecimento</h2>
+                <p class="panel-caption">Orientações demonstrativas por assunto</p>
+              </div>
+              <span class="demo-badge">Conteúdo demonstrativo</span>
+            </div>
+            <div class="panel-body kb-body">
+              <div class="kb-search-wrap">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <label class="sr-only" for="kb-search">Buscar na base de conhecimento</label>
+                <input type="search" id="kb-search" placeholder="Buscar na base de conhecimento">
+              </div>
+              <div class="kb-cats" id="kb-cat-chips" role="group" aria-label="Filtrar por categoria"></div>
+              <div class="kb-result-line" id="kb-result-count" aria-live="polite"></div>
+              <div class="kb-articles" id="kb-articles-list"></div>
+              <div class="kb-empty" id="kb-empty" hidden>
+                <p>Nenhum conteúdo demonstrativo encontrado para esta busca.</p>
+                <button type="button" class="btn btn-ghost btn-sm" id="kb-clear-filters">Limpar filtros</button>
+              </div>
+            </div>
+          </section>
 
-          <div id="knowledge-articles-container" style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Renderizado dinamicamente pelo app.js -->
-          </div>
-        </div>
+          <section class="panel kb-popular-panel" aria-labelledby="kb-popular-title">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title" id="kb-popular-title">Mais procurados</h2>
+                <p class="panel-caption">Atalhos demonstrativos de dúvidas</p>
+              </div>
+            </div>
+            <div class="panel-body kb-popular-body">
+              <ol class="kb-popular" id="kb-popular-list"></ol>
+            </div>
+          </section>
+        </aside>
       </div>
     </main>
   </div>
@@ -57,5 +103,6 @@
   <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/api-client.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/secondary-pages.js"></script>
 </body>
 </html>

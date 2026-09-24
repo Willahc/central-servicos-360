@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requestRepository } from '../../database';
-import { NotFoundError, ValidationError } from '../../common/errors/AppError';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../common/errors/AppError';
+import { hasServiceScope } from '../../common/authorization';
 import { validate } from '../../middleware/validate';
 import { authorize } from '../../middleware/auth';
 import { validateTransition, validateTransitionRole, getAllowedTransitions } from '../../common/state-machine';
@@ -11,6 +12,9 @@ import {
   requestsQuerySchema
 } from '../../common/validation-schemas';
 
+import { ServiceFront } from '../../database/repositories/RequestRepository';
+import { assertCanReadRequest, assertRequestOwnerOrAdmin, canReadRequest } from '../../common/request-access';
+
 const router = Router();
 
 // GET /api/requests - Listar solicitações com filtros
@@ -19,15 +23,17 @@ router.get('/', validate(requestsQuerySchema), async (req: Request, res: Respons
 
   const filters: {
     status?: 'RASCUNHO' | 'PENDENTE_APROVACAO' | 'APROVADO' | 'EM_ATENDIMENTO' | 'CONCLUIDO' | 'REJEITADO' | 'CANCELADO';
-    serviceType?: 'viagem' | 'mobilidade' | 'correios' | 'xerox';
+    serviceType?: ServiceFront;
     requesterId?: string;
   } = {};
 
   if (status) filters.status = status as 'RASCUNHO' | 'PENDENTE_APROVACAO' | 'APROVADO' | 'EM_ATENDIMENTO' | 'CONCLUIDO' | 'REJEITADO' | 'CANCELADO';
-  if (serviceType) filters.serviceType = serviceType as 'viagem' | 'mobilidade' | 'correios' | 'xerox';
+  if (serviceType) filters.serviceType = serviceType as ServiceFront;
   if (requesterId) filters.requesterId = requesterId as string;
 
-  const requests = await requestRepository.findByFilters(filters);
+  let requests = await requestRepository.findByFilters(filters);
+  const role = req.user!.role;
+  if (role !== 'ADMINISTRADOR') requests = requests.filter(item => canReadRequest(req, item));
 
   res.json({
     success: true,
@@ -44,6 +50,7 @@ router.get('/:id', async (req: Request, res: Response) => {
   if (!request) {
     throw new NotFoundError('Solicitação');
   }
+  assertCanReadRequest(req, request);
 
   // Incluir transições permitidas na resposta
   const allowedTransitions = getAllowedTransitions(request.status);
@@ -59,11 +66,12 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 // POST /api/requests - Criar nova solicitação
 router.post('/', authorize('colaborador', 'administrador'), validate(createRequestSchema), async (req: Request, res: Response) => {
-  const { serviceType, title, requesterId, requesterName, costCenter, urgent, details, status } = req.body;
+  const { serviceType, title, urgent, details } = req.body;
+  const { id: requesterId, name: requesterName, costCenter } = req.user!;
 
   const newRequest = {
     id: requestRepository.generateId('SOL'),
-    serviceType: serviceType as 'viagem' | 'mobilidade' | 'correios' | 'xerox',
+    serviceType: serviceType as ServiceFront,
     title,
     requesterId,
     requesterName,
@@ -98,6 +106,7 @@ router.put('/:id/submit', authorize('colaborador', 'administrador'), validate(su
   if (!request) {
     throw new NotFoundError('Solicitação');
   }
+  assertRequestOwnerOrAdmin(req, request);
 
   // R5: Usar máquina de estados centralizada
   validateTransition(request.status, 'PENDENTE_APROVACAO');
@@ -118,7 +127,7 @@ router.put('/:id/submit', authorize('colaborador', 'administrador'), validate(su
 // PUT /api/requests/:id/transition - Transição genérica de status
 router.put('/:id/transition', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { targetStatus, user } = req.body;
+  const { targetStatus } = req.body;
 
   if (!targetStatus) {
     throw new ValidationError('targetStatus é obrigatório');
@@ -128,6 +137,7 @@ router.put('/:id/transition', async (req: Request, res: Response) => {
   if (!request) {
     throw new NotFoundError('Solicitação');
   }
+  assertCanReadRequest(req, request);
 
   // R5: Validar transição de estado
   validateTransition(request.status, targetStatus);
@@ -139,7 +149,7 @@ router.put('/:id/transition', async (req: Request, res: Response) => {
   const updatedRequest = await requestRepository.updateStatus(
     id,
     targetStatus,
-    user || req.user?.name || 'Sistema',
+    req.user!.name,
     `Transição: ${request.status} → ${targetStatus}`
   );
 
@@ -157,6 +167,7 @@ router.get('/:id/history', async (req: Request, res: Response) => {
   if (!request) {
     throw new NotFoundError('Solicitação');
   }
+  assertCanReadRequest(req, request);
 
   res.json({
     success: true,
@@ -172,6 +183,7 @@ router.delete('/:id', authorize('colaborador', 'administrador'), async (req: Req
   if (!request) {
     throw new NotFoundError('Solicitação');
   }
+  assertRequestOwnerOrAdmin(req, request);
 
   // R5: Usar máquina de estados centralizada
   validateTransition(request.status, 'CANCELADO');

@@ -21,6 +21,10 @@ coverage/
 *.temp
 *.bak
 *.zip
+*.csv
+*.xlsx
+*.parquet
+*.dump
 Thumbs.db
 .DS_Store
 
@@ -41,3 +45,6 @@ scratch/
 tools/
 *_1600x900*.png
 *_1366x768*.png
+visual-audit/
+docs/mockups/
+*.png

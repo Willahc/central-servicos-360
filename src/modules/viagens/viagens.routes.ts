@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express';
 import { requestRepository } from '../../database';
 import { NotFoundError, ValidationError } from '../../common/errors/AppError';
 import { validateTransition } from '../../common/state-machine';
-import { authorize } from '../../middleware/auth';
+import { authorize, authorizeService } from '../../middleware/auth';
+import { assertCanReadRequest } from '../../common/request-access';
 
 const router = Router();
 
@@ -10,7 +11,7 @@ const router = Router();
 const mockNonFlownTickets = [
   {
     id: 'TKT-99420',
-    passenger: 'Carlos Andrade',
+    passenger: 'Solicitante Exemplo A',
     airline: 'LATAM',
     ticketNumber: '045-2345678901',
     originalDate: '2026-03-10',
@@ -22,7 +23,7 @@ const mockNonFlownTickets = [
   },
   {
     id: 'TKT-88112',
-    passenger: 'Fernanda Lima',
+    passenger: 'Solicitante Exemplo B',
     airline: 'GOL',
     ticketNumber: '127-9876543210',
     originalDate: '2026-04-15',
@@ -34,7 +35,7 @@ const mockNonFlownTickets = [
   },
   {
     id: 'TKT-77341',
-    passenger: 'Mariana Costa',
+    passenger: 'Viajante Simulado',
     airline: 'AZUL',
     ticketNumber: '577-4561237890',
     originalDate: '2026-01-20',
@@ -47,7 +48,7 @@ const mockNonFlownTickets = [
 ];
 
 // GET /api/viagens - Listar solicitações de viagem
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('viagem'), async (req: Request, res: Response) => {
   const viagens = await requestRepository.findByServiceType('viagem');
 
   res.json({
@@ -58,13 +59,14 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/viagens/:id - Detalhes da viagem
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id(SOL-[A-Za-z0-9-]+)', async (req: Request, res: Response) => {
   const { id } = req.params;
   const viagem = await requestRepository.findById(id);
 
   if (!viagem || viagem.serviceType !== 'viagem') {
     throw new NotFoundError('Solicitação de viagem');
   }
+  assertCanReadRequest(req, viagem);
 
   res.json({
     success: true,
@@ -80,6 +82,7 @@ router.get('/:id/itinerary', async (req: Request, res: Response) => {
   if (!viagem || viagem.serviceType !== 'viagem') {
     throw new NotFoundError('Solicitação de viagem');
   }
+  assertCanReadRequest(req, viagem);
 
   const itinerary = {
     requestId: viagem.id,
@@ -103,7 +106,7 @@ router.get('/:id/itinerary', async (req: Request, res: Response) => {
 });
 
 // GET /api/non-flown-tickets - Listar bilhetes não voados
-router.get('/non-flown-tickets', async (req: Request, res: Response) => {
+router.get('/non-flown-tickets', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('viagem'), async (req: Request, res: Response) => {
   res.json({
     success: true,
     data: mockNonFlownTickets,
@@ -112,7 +115,7 @@ router.get('/non-flown-tickets', async (req: Request, res: Response) => {
 });
 
 // PUT /api/non-flown-tickets/:id/apply - Aplicar crédito a viagem
-router.put('/non-flown-tickets/:id/apply', authorize('viagens', 'administrador'), async (req: Request, res: Response) => {
+router.put('/non-flown-tickets/:id/apply', authorize('operador', 'administrador'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { requestId } = req.body;
 
@@ -144,6 +147,7 @@ router.get('/:id/insurance', async (req: Request, res: Response) => {
   if (!viagem || viagem.serviceType !== 'viagem') {
     throw new NotFoundError('Solicitação de viagem');
   }
+  assertCanReadRequest(req, viagem);
 
   const insurance = {
     requestId: viagem.id,
@@ -161,7 +165,7 @@ router.get('/:id/insurance', async (req: Request, res: Response) => {
 });
 
 // PUT /api/viagens/:id/start - Iniciar atendimento da viagem (APROVADO → EM_ATENDIMENTO)
-router.put('/:id/start', authorize('viagens', 'administrador'), async (req: Request, res: Response) => {
+router.put('/:id/start', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('viagem'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const viagem = await requestRepository.findById(id);
 
@@ -186,7 +190,7 @@ router.put('/:id/start', authorize('viagens', 'administrador'), async (req: Requ
 });
 
 // PUT /api/viagens/:id/complete - Concluir viagem (EM_ATENDIMENTO → CONCLUIDO)
-router.put('/:id/complete', authorize('viagens', 'administrador'), async (req: Request, res: Response) => {
+router.put('/:id/complete', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('viagem'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const viagem = await requestRepository.findById(id);
 

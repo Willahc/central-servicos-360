@@ -43,13 +43,13 @@ const ALLOWED_TRANSITIONS: Record<RequestStatus, RequestStatus[]> = {
  * | EM_ATENDIMENTO → CONCLUIDO     | viagens, faturamento, coordenadora, administrador |
  */
 const TRANSITION_ROLES: Record<string, string[]> = {
-  'RASCUNHO->PENDENTE_APROVACAO': ['colaborador', 'administrador'],
-  'RASCUNHO->CANCELADO': ['colaborador', 'administrador'],
-  'PENDENTE_APROVACAO->APROVADO': ['gestor', 'coordenadora', 'administrador'],
-  'PENDENTE_APROVACAO->REJEITADO': ['gestor', 'coordenadora', 'administrador'],
-  'PENDENTE_APROVACAO->CANCELADO': ['colaborador', 'gestor', 'coordenadora', 'administrador'],
-  'APROVADO->EM_ATENDIMENTO': ['viagens', 'faturamento', 'coordenadora', 'administrador'],
-  'EM_ATENDIMENTO->CONCLUIDO': ['viagens', 'faturamento', 'coordenadora', 'administrador']
+  'RASCUNHO->PENDENTE_APROVACAO': ['COLABORADOR', 'ADMINISTRADOR'],
+  'RASCUNHO->CANCELADO': ['COLABORADOR', 'ADMINISTRADOR'],
+  'PENDENTE_APROVACAO->APROVADO': ['GESTOR_APROVADOR', 'ADMINISTRADOR'],
+  'PENDENTE_APROVACAO->REJEITADO': ['GESTOR_APROVADOR', 'ADMINISTRADOR'],
+  'PENDENTE_APROVACAO->CANCELADO': ['COLABORADOR', 'GESTOR_APROVADOR', 'ADMINISTRADOR'],
+  'APROVADO->EM_ATENDIMENTO': ['AGENTE_SERVICO', 'ADMINISTRADOR'],
+  'EM_ATENDIMENTO->CONCLUIDO': ['AGENTE_SERVICO', 'ADMINISTRADOR']
 };
 
 export function canTransition(from: RequestStatus, to: RequestStatus): boolean {

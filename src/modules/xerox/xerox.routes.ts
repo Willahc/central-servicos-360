@@ -2,14 +2,15 @@ import { Router, Request, Response } from 'express';
 import { requestRepository } from '../../database';
 import { NotFoundError, ValidationError } from '../../common/errors/AppError';
 import { validate } from '../../middleware/validate';
-import { authorize } from '../../middleware/auth';
+import { authorize, authorizeService } from '../../middleware/auth';
+import { assertCanReadRequest, assertRequestOwnerOrAdmin } from '../../common/request-access';
 import { validateTransition } from '../../common/state-machine';
 import { createXeroxJobSchema } from '../../common/validation-schemas';
 
 const router = Router();
 
 // GET /api/xerox/jobs - Listar jobs de impressão
-router.get('/jobs', async (req: Request, res: Response) => {
+router.get('/jobs', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('xerox'), async (req: Request, res: Response) => {
   const xeroxJobs = await requestRepository.findByServiceType('xerox');
 
   res.json({
@@ -27,6 +28,7 @@ router.get('/jobs/:id', async (req: Request, res: Response) => {
   if (!job || job.serviceType !== 'xerox') {
     throw new NotFoundError('Job de impressão');
   }
+  assertCanReadRequest(req, job);
 
   res.json({
     success: true,
@@ -36,7 +38,8 @@ router.get('/jobs/:id', async (req: Request, res: Response) => {
 
 // POST /api/xerox/jobs - Criar novo job de impressão
 router.post('/jobs', authorize('colaborador', 'administrador'), validate(createXeroxJobSchema), async (req: Request, res: Response) => {
-  const { title, requesterId, requesterName, costCenter, details } = req.body;
+  const { title, details } = req.body;
+  const { id: requesterId, name: requesterName, costCenter } = req.user!;
 
   const newJob = {
     id: requestRepository.generateId('SOL'),
@@ -83,6 +86,7 @@ router.post('/jobs/:id/file', authorize('colaborador', 'administrador'), async (
   if (!job || job.serviceType !== 'xerox') {
     throw new NotFoundError('Job de impressão');
   }
+  assertRequestOwnerOrAdmin(req, job);
 
   const fileInfo = {
     fileName: `arquivo_${id}.pdf`,
@@ -106,6 +110,7 @@ router.get('/jobs/:id/status', async (req: Request, res: Response) => {
   if (!job || job.serviceType !== 'xerox') {
     throw new NotFoundError('Job de impressão');
   }
+  assertCanReadRequest(req, job);
 
   const status = {
     requestId: job.id,

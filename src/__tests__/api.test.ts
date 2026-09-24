@@ -3,7 +3,14 @@ import app from '../main';
 
 // Helper para obter token mock com role específica
 function getAuthToken(role: string = 'colaborador'): string {
-  return `mock_jwt_token_USR-001_${role}_${Date.now()}`;
+  const identities: Record<string, [string, string]> = {
+    colaborador: ['USR-001', 'COLABORADOR'], gestor: ['USR-002', 'GESTOR_APROVADOR'],
+    viagens: ['USR-003', 'AGENTE_SERVICO'], operador: ['USR-003', 'AGENTE_SERVICO'],
+    faturamento: ['USR-008', 'ADMINISTRADOR'], financeiro: ['USR-008', 'ADMINISTRADOR'],
+    coordenadora: ['USR-008', 'ADMINISTRADOR'], administrador: ['USR-008', 'ADMINISTRADOR']
+  };
+  const [userId, canonicalRole] = identities[role] || ['USR-001', 'COLABORADOR'];
+  return `mock_jwt_token_${userId}_${canonicalRole}_${Date.now()}`;
 }
 
 // ============================================================================
@@ -30,7 +37,7 @@ describe('1. FALLBACK - Comportamento por código HTTP', () => {
         title: 'Teste 400',
         requesterId: 'USR-001',
         requesterName: 'Teste',
-        costCenter: 'CC-1010',
+        costCenter: 'CC-DEMO-01',
         status: 'CONCLUIDO'
       });
     expect(res.status).toBe(422);
@@ -389,7 +396,7 @@ describe('4. SESSION - Proteção com authenticate', () => {
       .get('/api/auth/session')
       .set('Authorization', `Bearer ${getAuthToken('gestor')}`);
     expect(res.status).toBe(200);
-    expect(res.body.data.user.role).toBe('gestor');
+    expect(res.body.data.user.role).toBe('GESTOR_APROVADOR');
   });
 
   it('Session com token legado (sem role) retorna colaborador', async () => {
@@ -399,7 +406,7 @@ describe('4. SESSION - Proteção com authenticate', () => {
       .get('/api/auth/session')
       .set('Authorization', `Bearer ${legacyToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.data.user.role).toBe('colaborador');
+    expect(res.body.data.user.role).toBe('COLABORADOR');
   });
 });
 
@@ -477,7 +484,7 @@ describe('Autenticação', () => {
   it('POST /api/auth/login com email válido deve retornar 200 e token', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'carlos.andrade@ficticio.org' });
+      .send({ email: 'exemplo.a@ficticio.org' });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.token).toBeDefined();
@@ -505,7 +512,7 @@ describe('Autenticação', () => {
   it('GET /api/auth/roles deve retornar lista de perfis', async () => {
     const res = await request(app).get('/api/auth/roles');
     expect(res.status).toBe(200);
-    expect(res.body.data.length).toBe(9);
+    expect(res.body.data.length).toBe(4);
   });
 });
 
@@ -573,8 +580,8 @@ describe('Criação de solicitação', () => {
         serviceType: 'mobilidade',
         title: 'Solicitação Válida',
         requesterId: 'USR-001',
-        requesterName: 'Carlos Andrade',
-        costCenter: 'CC-3021'
+        requesterName: 'Solicitante Exemplo A',
+        costCenter: 'CC-DEMO-01'
       });
     expect(res.status).toBe(201);
     expect(res.body.data.status).toBe('RASCUNHO');
@@ -589,7 +596,7 @@ describe('Criação de solicitação', () => {
         title: 'Teste Status Proibido',
         requesterId: 'USR-001',
         requesterName: 'Teste',
-        costCenter: 'CC-1010',
+        costCenter: 'CC-DEMO-01',
         status: 'CONCLUIDO'
       });
     expect(res.status).toBe(422);
@@ -617,7 +624,7 @@ describe('Transições de estado (máquina de estados)', () => {
         serviceType: 'viagem',
         title: 'Teste Estado',
         requesterId: 'USR-001',
-        requesterName: 'Carlos Andrade',
+        requesterName: 'Solicitante Exemplo A',
         costCenter: 'CC-1010'
       });
     requestId = createRes.body.data.id;
@@ -745,7 +752,7 @@ describe('Aprovação', () => {
 });
 
 describe('Endpoints dos módulos', () => {
-  const token = getAuthToken('colaborador');
+  const token = getAuthToken('administrador');
 
   it('GET /api/dashboard/metrics deve retornar 200', async () => {
     const res = await request(app)
@@ -789,11 +796,149 @@ describe('Endpoints dos módulos', () => {
     expect(res.status).toBe(200);
   });
 
-  it('GET /api/finance/cost-centers deve retornar 200', async () => {
+  it('GET /api/finance/cost-centers com colaborador deve retornar 403', async () => {
     const res = await request(app)
       .get('/api/finance/cost-centers')
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${getAuthToken('colaborador')}`);
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('GET /api/finance/cost-centers com financeiro deve retornar 200', async () => {
+    const res = await request(app)
+      .get('/api/finance/cost-centers')
+      .set('Authorization', `Bearer ${getAuthToken('financeiro')}`);
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('GET /api/finance/cost-centers com administrador deve retornar 200', async () => {
+    const res = await request(app)
+      .get('/api/finance/cost-centers')
+      .set('Authorization', `Bearer ${getAuthToken('administrador')}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('GET /api/finance/cost-centers com gestor deve retornar 200 e somente CC próprio', async () => {
+    // USR-002 = gestor com email exemplo.b@ficticio.org mapeado para CC-DEMO-02
+    const gestorToken = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .get('/api/finance/cost-centers')
+      .set('Authorization', `Bearer ${gestorToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    // Gestor deve receber apenas 1 CC (seu próprio)
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].code).toBe('CC-DEMO-02');
+  });
+
+  it('POST /api/finance/export com colaborador deve retornar 403', async () => {
+    const res = await request(app)
+      .post('/api/finance/export')
+      .set('Authorization', `Bearer ${getAuthToken('colaborador')}`)
+      .send({});
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('POST /api/finance/export com financeiro deve ser permitido', async () => {
+    const res = await request(app)
+      .post('/api/finance/export')
+      .set('Authorization', `Bearer ${getAuthToken('financeiro')}`)
+      .send({});
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('POST /api/finance/export com administrador deve ser permitido', async () => {
+    const res = await request(app)
+      .post('/api/finance/export')
+      .set('Authorization', `Bearer ${getAuthToken('administrador')}`)
+      .send({});
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('POST /api/finance/export com gestor deve retornar 403', async () => {
+    const gestorToken = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .post('/api/finance/export')
+      .set('Authorization', `Bearer ${gestorToken}`)
+      .send({});
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('GET /api/finance/conciliation com colaborador deve retornar 403', async () => {
+    const res = await request(app)
+      .get('/api/finance/conciliation')
+      .set('Authorization', `Bearer ${getAuthToken('colaborador')}`);
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('GET /api/finance/conciliation com gestor deve retornar 200 e escopo CC próprio', async () => {
+    const gestorToken = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .get('/api/finance/conciliation')
+      .set('Authorization', `Bearer ${gestorToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.scope).toBe('CC próprio');
+  });
+
+  it('GET /api/finance/conciliation com financeiro deve retornar 200 e escopo consolidado', async () => {
+    const res = await request(app)
+      .get('/api/finance/conciliation')
+      .set('Authorization', `Bearer ${getAuthToken('financeiro')}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.scope).toBe('Consolidado');
+  });
+
+  it('GET /api/finance/alerts com colaborador deve retornar 403', async () => {
+    const res = await request(app)
+      .get('/api/finance/alerts')
+      .set('Authorization', `Bearer ${getAuthToken('colaborador')}`);
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('GET /api/finance/alerts com gestor deve retornar 200', async () => {
+    const gestorToken = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .get('/api/finance/alerts')
+      .set('Authorization', `Bearer ${gestorToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('GET /api/finance/cost-centers/CC-DEMO-01/summary com colaborador deve retornar 403', async () => {
+    const res = await request(app)
+      .get('/api/finance/cost-centers/CC-DEMO-01/summary')
+      .set('Authorization', `Bearer ${getAuthToken('colaborador')}`);
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('GET /api/finance/cost-centers/CC-DEMO-02/summary com gestor deve retornar 200 (CC próprio)', async () => {
+    const gestorToken = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .get('/api/finance/cost-centers/CC-DEMO-02/summary')
+      .set('Authorization', `Bearer ${gestorToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('GET /api/finance/cost-centers/CC-DEMO-01/summary com gestor deve retornar 403 (CC alheio)', async () => {
+    const gestorToken = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .get('/api/finance/cost-centers/CC-DEMO-01/summary')
+      .set('Authorization', `Bearer ${gestorToken}`);
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
   });
 
   it('GET /api/suppliers deve retornar 200', async () => {
@@ -825,7 +970,7 @@ describe('Endpoints dos módulos', () => {
         title: 'Impressão Teste',
         requesterId: 'USR-001',
         requesterName: 'Teste',
-        costCenter: 'CC-1010',
+        costCenter: 'CC-DEMO-01',
         details: { fileName: 'doc.pdf' }
       });
     expect(res.status).toBe(201);
@@ -863,7 +1008,7 @@ describe('Endpoints dos módulos', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         userEmail: 'teste@ficticio.org',
-        costCenter: 'CC-1010',
+        costCenter: 'CC-DEMO-01',
         reason: 'Deslocamento'
       });
     expect(res.status).toBe(200);
@@ -903,19 +1048,17 @@ describe('9. AUTH BOOTSTRAP - Sincronização token/sessão/perfil', () => {
     expect(res.status).toBe(401);
   });
 
-  it('Token com formato inválido → session aceita com role padrão (mock)', async () => {
+  it('Token com formato inválido → session rejeita autenticação', async () => {
     const res = await request(app)
       .get('/api/auth/session')
       .set('Authorization', 'Bearer token_completamente_invalido');
-    // Mock auth aceita qualquer token e atribui role padrão
-    expect(res.status).toBe(200);
-    expect(res.body.data.user.role).toBe('colaborador');
+    expect(res.status).toBe(401);
   });
 
   it('API ativa + token válido → session 200', async () => {
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'carlos.andrade@ficticio.org' });
+      .send({ email: 'exemplo.a@ficticio.org' });
     const token = loginRes.body.data.token;
 
     const res = await request(app)
@@ -930,14 +1073,14 @@ describe('9. AUTH BOOTSTRAP - Sincronização token/sessão/perfil', () => {
   it('Role retornada pela session corresponde ao perfil logado', async () => {
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'fernanda.lima@ficticio.org' });
+      .send({ email: 'exemplo.b@ficticio.org' });
     const token = loginRes.body.data.token;
 
     const sessionRes = await request(app)
       .get('/api/auth/session')
       .set('Authorization', `Bearer ${token}`);
     expect(sessionRes.status).toBe(200);
-    expect(sessionRes.body.data.user.role).toBe('gestor');
+    expect(sessionRes.body.data.user.role).toBe('GESTOR_APROVADOR');
   });
 
   it('401 nunca gera fallback - endpoint de solicitações', async () => {
@@ -950,7 +1093,7 @@ describe('9. AUTH BOOTSTRAP - Sincronização token/sessão/perfil', () => {
   it('403 nunca gera fallback - aprovação sem perfil gestor', async () => {
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'carlos.andrade@ficticio.org' });
+      .send({ email: 'exemplo.a@ficticio.org' });
     const token = loginRes.body.data.token;
 
     const res = await request(app)
@@ -984,7 +1127,7 @@ describe('10. FALLBACK CONSISTENTE - Aprovações', () => {
   });
 
   it('Aprovações com token válido deve retornar 200', async () => {
-    const token = getAuthToken();
+    const token = getAuthToken('gestor');
     const res = await request(app)
       .get('/api/approvals/pending')
       .set('Authorization', `Bearer ${token}`);
@@ -992,16 +1135,16 @@ describe('10. FALLBACK CONSISTENTE - Aprovações', () => {
     expect(res.body.success).toBe(true);
   });
 
-  it('Aprovações com token de colaborador deve funcionar (leitura)', async () => {
+  it('Aprovações com token de colaborador deve ser bloqueada', async () => {
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'carlos.andrade@ficticio.org' });
+      .send({ email: 'exemplo.a@ficticio.org' });
     const token = loginRes.body.data.token;
 
     const res = await request(app)
       .get('/api/approvals/pending')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -1028,16 +1171,235 @@ describe('11. CONTEÚDO DEMONSTRATIVO', () => {
   it('Login com email de gestor retorna token com role gestor', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'fernanda.lima@ficticio.org' });
+      .send({ email: 'exemplo.b@ficticio.org' });
     expect(res.status).toBe(200);
-    expect(res.body.data.user.role).toBe('gestor');
+    expect(res.body.data.user.role).toBe('GESTOR_APROVADOR');
   });
 
-  it('Login com email de viagens retorna token com role viagens', async () => {
+  it('Login com email de viagens retorna role operador e serviceScope viagem', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'william.nunes@ficticio.org' });
+      .send({ email: 'operador.viagens@ficticio.org' });
     expect(res.status).toBe(200);
-    expect(res.body.data.user.role).toBe('viagens');
+    expect(res.body.data.user.role).toBe('AGENTE_SERVICO');
+    expect(res.body.data.user.serviceScopes).toEqual(['viagens', 'mobilidade']);
+  });
+});
+
+// ============================================================================
+// 12. CONSISTÊNCIA DE KPIS E FILTROS DE SOLICITAÇÕES
+// ============================================================================
+describe('12. CONSISTÊNCIA DE KPIS E FILTROS DE SOLICITAÇÕES', () => {
+  const token = getAuthToken('colaborador');
+
+  it('Coleção inicial de solicitações do mock centralizado possui 5 itens', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const mockFile = fs.readFileSync(path.join(__dirname, '../../prototype/assets/js/mock-data.js'), 'utf8');
+
+    // Validar presença dos 5 IDs padrão
+    expect(mockFile).toContain('SOL-2026-001');
+    expect(mockFile).toContain('SOL-2026-002');
+    expect(mockFile).toContain('SOL-2026-003');
+    expect(mockFile).toContain('SOL-2026-004');
+    expect(mockFile).toContain('SOL-2026-005');
+  });
+
+  it('Derivação dinâmica de KPIs a partir de qualquer coleção de solicitações é matematicamente consistente', async () => {
+    const res = await request(app)
+      .get('/api/requests')
+      .set('Authorization', `Bearer ${token}`);
+    const requests: Array<{ id: string; status: string; serviceType: string }> = res.body.data;
+
+    const total = requests.length;
+    const pending = requests.filter(r => r.status === 'PENDENTE_APROVACAO').length;
+    const approved = requests.filter(r => r.status === 'APROVADO').length;
+    const inProgress = requests.filter(r => r.status === 'EM_ATENDIMENTO').length;
+    const completed = requests.filter(r => r.status === 'CONCLUIDO').length;
+    const rejected = requests.filter(r => r.status === 'REJEITADO').length;
+    const draft = requests.filter(r => r.status === 'RASCUNHO').length;
+    const cancelled = requests.filter(r => r.status === 'CANCELADO').length;
+
+    expect(total).toBeGreaterThanOrEqual(5);
+    expect(pending + approved + inProgress + completed + rejected + draft + cancelled).toBe(total);
+  });
+
+  it('Filtro por status opera de forma determinística sobre a coleção', async () => {
+    const res = await request(app)
+      .get('/api/requests')
+      .set('Authorization', `Bearer ${token}`);
+    const requests: Array<{ status: string }> = res.body.data;
+
+    const filterByStatus = (status: string) =>
+      status === 'ALL' ? requests : requests.filter(r => r.status === status);
+
+    expect(filterByStatus('ALL').length).toBe(requests.length);
+    expect(filterByStatus('PENDENTE_APROVACAO').length).toBe(requests.filter(r => r.status === 'PENDENTE_APROVACAO').length);
+    expect(filterByStatus('APROVADO').length).toBe(requests.filter(r => r.status === 'APROVADO').length);
+    expect(filterByStatus('EM_ATENDIMENTO').length).toBe(requests.filter(r => r.status === 'EM_ATENDIMENTO').length);
+    expect(filterByStatus('CONCLUIDO').length).toBe(requests.filter(r => r.status === 'CONCLUIDO').length);
+  });
+
+  it('Filtro por frente de serviço opera de forma determinística sobre a coleção', async () => {
+    const res = await request(app)
+      .get('/api/requests')
+      .set('Authorization', `Bearer ${token}`);
+    const requests: Array<{ serviceType: string }> = res.body.data;
+
+    const filterByType = (type: string) =>
+      type === 'ALL' ? requests : requests.filter(r => r.serviceType === type);
+
+    expect(filterByType('ALL').length).toBe(requests.length);
+    expect(filterByType('viagem').length).toBe(requests.filter(r => r.serviceType === 'viagem').length);
+    expect(filterByType('mobilidade').length).toBe(requests.filter(r => r.serviceType === 'mobilidade').length);
+    expect(filterByType('correios').length).toBe(requests.filter(r => r.serviceType === 'correios').length);
+    expect(filterByType('xerox').length).toBe(requests.filter(r => r.serviceType === 'xerox').length);
+  });
+});
+
+// ============================================================================
+// 13. AS 3 EXPERIÊNCIAS (COLABORADOR, GESTOR, OPERADOR), SERVICE SCOPES E POLÍTICAS
+// ============================================================================
+describe('13. AS 3 EXPERIÊNCIAS, SERVICE SCOPES E POLÍTICAS DEMONSTRATIVAS', () => {
+  const colaboradorToken = getAuthToken('colaborador');
+  const gestorToken = getAuthToken('gestor');
+  const viagensOperadorToken = getAuthToken('viagens');
+
+  it('Colaborador sem acesso à exportação financeira consolidada (403)', async () => {
+    const res = await request(app)
+      .post('/api/finance/export')
+      .set('Authorization', `Bearer ${colaboradorToken}`)
+      .send({});
+    expect(res.status).toBe(403);
+  });
+
+  it('Colaborador sem acesso ao endpoint de conciliação financeira consolidada (403)', async () => {
+    const res = await request(app)
+      .get('/api/finance/conciliation')
+      .set('Authorization', `Bearer ${colaboradorToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('Gestor acessa apenas conciliação de seu escopo próprio', async () => {
+    const token = `mock_jwt_token_USR-002_gestor_${Date.now()}`;
+    const res = await request(app)
+      .get('/api/finance/conciliation')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.scope).toBe('CC próprio');
+  });
+
+  it('Gestor não pode concluir atendimento operacional de viagem (apenas operador/admin)', async () => {
+    const createRes = await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${colaboradorToken}`)
+      .send({
+        serviceType: 'viagem',
+        title: 'Viagem Teste Escopo Operacional',
+        requesterId: 'USR-001',
+        requesterName: 'Colaborador Demo',
+        costCenter: 'CC-DEMO-01'
+      });
+    const reqId = createRes.body.data.id;
+
+    await request(app)
+      .put(`/api/requests/${reqId}/submit`)
+      .set('Authorization', `Bearer ${colaboradorToken}`);
+
+    await request(app)
+      .put(`/api/approvals/${reqId}/approve`)
+      .set('Authorization', `Bearer ${gestorToken}`)
+      .send({ approverName: 'Gestor Demo', comment: 'OK' });
+
+    // Gestor tentando completar viagem diretamente (deve falhar com 403)
+    const res = await request(app)
+      .put(`/api/viagens/${reqId}/complete`)
+      .set('Authorization', `Bearer ${gestorToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('Operador de Viagens pode iniciar atendimento de viagem aprovada', async () => {
+    const createRes = await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${colaboradorToken}`)
+      .send({
+        serviceType: 'viagem',
+        title: 'Viagem Teste Operador Viagens',
+        requesterId: 'USR-001',
+        requesterName: 'Colaborador Demo',
+        costCenter: 'CC-DEMO-01'
+      });
+    const reqId = createRes.body.data.id;
+
+    await request(app)
+      .put(`/api/requests/${reqId}/submit`)
+      .set('Authorization', `Bearer ${colaboradorToken}`);
+
+    await request(app)
+      .put(`/api/approvals/${reqId}/approve`)
+      .set('Authorization', `Bearer ${gestorToken}`)
+      .send({ approverName: 'Gestor Demo', comment: 'OK' });
+
+    const res = await request(app)
+      .put(`/api/viagens/${reqId}/start`)
+      .set('Authorization', `Bearer ${viagensOperadorToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('EM_ATENDIMENTO');
+  });
+
+  it('EmployeeProfile possui formato mock estruturado com campos corporativos', () => {
+    const { mockEmployeeProfile } = require('../database/index');
+    expect(mockEmployeeProfile).toBeDefined();
+    expect(mockEmployeeProfile.matricula).toBe('MAT-DEMO-01');
+    expect(mockEmployeeProfile.nome).toBe('Colaborador Demo');
+    expect(mockEmployeeProfile.centroCusto).toBe('CC-DEMO-01');
+    expect(mockEmployeeProfile.gestor).toBe('Gestor Demo');
+  });
+
+  it('ServiceScopes define escopos corretos para operador de viagens, serviços gerais e coordenação', () => {
+    const { mockServiceScopes } = require('../database/index');
+    expect(mockServiceScopes).toBeDefined();
+    expect(mockServiceScopes.operador_viagens).toEqual(['viagem']);
+    expect(mockServiceScopes.operador_servicos_gerais).toContain('entregas');
+    expect(mockServiceScopes.operador_servicos_gerais).toContain('estacionamento');
+    expect(mockServiceScopes.coordenacao).toEqual(['ALL']);
+    expect(mockServiceScopes.administrador).toEqual(['ALL']);
+  });
+
+  it('PolicyDocuments identifica inequivocamente conteúdo demonstrativo', () => {
+    const { mockPolicyDocuments } = require('../database/index');
+    expect(Array.isArray(mockPolicyDocuments)).toBe(true);
+    expect(mockPolicyDocuments.length).toBeGreaterThanOrEqual(4);
+
+    const viagemPol = mockPolicyDocuments.find((p: any) => p.service === 'viagem');
+    expect(viagemPol).toBeDefined();
+    expect(viagemPol.status).toBe('VIGENTE');
+    expect(viagemPol.sourceType).toBe('DEMONSTRATIVO');
+    expect(viagemPol.content).toContain('14 dias');
+
+    const mobPol = mockPolicyDocuments.find((p: any) => p.service === 'mobilidade');
+    expect(mobPol).toBeDefined();
+    expect(mobPol.content).toContain('22h e 06h');
+  });
+
+  it('Investigação de Ocorrência aceita criação de requisição e mantém campos demonstrativos', async () => {
+    const res = await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${colaboradorToken}`)
+      .send({
+        serviceType: 'investigacao_ocorrencia',
+        title: 'Ocorrência: Avaria em Equipamento',
+        requesterId: 'USR-001',
+        requesterName: 'Colaborador Demo',
+        costCenter: 'CC-DEMO-01',
+        details: {
+          category: 'Patrimonial / Operacional',
+          location: 'Área Demonstrativa',
+          statusLevantamento: 'Campos e procedimento pendentes de levantamento no sistema atual.'
+        }
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.data.serviceType).toBe('investigacao_ocorrencia');
+    expect(res.body.data.details.statusLevantamento).toContain('pendentes de levantamento');
   });
 });

@@ -2,13 +2,14 @@ import { Router, Request, Response } from 'express';
 import { requestRepository } from '../../database';
 import { NotFoundError, ValidationError } from '../../common/errors/AppError';
 import { validate } from '../../middleware/validate';
-import { authorize } from '../../middleware/auth';
+import { authorize, authorizeService } from '../../middleware/auth';
+import { assertCanReadRequest } from '../../common/request-access';
 import { createCorreioSchema, updateCorreioUsageTypeSchema } from '../../common/validation-schemas';
 
 const router = Router();
 
 // GET /api/correios - Listar pedidos de envio
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('correios'), async (req: Request, res: Response) => {
   const correios = await requestRepository.findByServiceType('correios');
 
   res.json({
@@ -26,6 +27,7 @@ router.get('/:id', async (req: Request, res: Response) => {
   if (!correio || correio.serviceType !== 'correios') {
     throw new NotFoundError('Solicitação de correios');
   }
+  assertCanReadRequest(req, correio);
 
   res.json({
     success: true,
@@ -35,7 +37,8 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 // POST /api/correios - Criar nova solicitação de postagem
 router.post('/', authorize('colaborador', 'administrador'), validate(createCorreioSchema), async (req: Request, res: Response) => {
-  const { title, requesterId, requesterName, costCenter, details } = req.body;
+  const { title, details } = req.body;
+  const { id: requesterId, name: requesterName, costCenter } = req.user!;
 
   const newRequest = {
     id: requestRepository.generateId('SOL'),
@@ -75,6 +78,7 @@ router.get('/:id/tracking', async (req: Request, res: Response) => {
   if (!correio || correio.serviceType !== 'correios') {
     throw new NotFoundError('Solicitação de correios');
   }
+  assertCanReadRequest(req, correio);
 
   const tracking = {
     requestId: correio.id,
@@ -106,6 +110,7 @@ router.put('/:id/usage-type', authorize('colaborador', 'administrador', 'faturam
   if (!correio || correio.serviceType !== 'correios') {
     throw new NotFoundError('Solicitação de correios');
   }
+  assertCanReadRequest(req, correio);
 
   const updatedDetails = { ...correio.details, usageType };
   await requestRepository.update(id, { details: updatedDetails });

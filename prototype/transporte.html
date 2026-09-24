@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Transporte Interno</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-page="transporte">
+  <div id="app-layout-root">
+    <main class="page-content" id="page-content-slot">
+      <!-- Cabeçalho do Módulo -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
+        <div>
+          <h1 class="page-title">Transporte Interno</h1>
+          <p class="page-subtitle">Movimentação interna de pessoas, pacientes monitorados, materiais e equipamentos.</p>
+        </div>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html?type=transporte" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">🚐 Nova Solicitação de Transporte</a>
+        </div>
+      </div>
+
+      <!-- Faixa de KPIs Operacionais Derivados -->
+      <div class="kpi-mini-grid grid-6-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📋</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Total de Pedidos</span>
+            <span class="kpi-mini-val" id="kpi-trp-total">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Aguardando Aceite</span>
+            <span class="kpi-mini-val" id="kpi-trp-pendentes">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">⚙️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Execução</span>
+            <span class="kpi-mini-val" id="kpi-trp-execucao">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Concluídos Hoje</span>
+            <span class="kpi-mini-val" id="kpi-trp-concluidos">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">⏱️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Tempo Médio SLA</span>
+            <span class="kpi-mini-val" id="kpi-trp-tempo-medio">28 min</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--danger-bg); color: var(--danger);">🚨</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Prioridade Urgente</span>
+            <span class="kpi-mini-val" id="kpi-trp-urgentes">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout Principal em 2 Colunas -->
+      <div class="form-layout-grid">
+        <!-- Coluna Esquerda: Filtros e Tabela Operacional -->
+        <div class="form-main-col">
+          <!-- Callout Operacional -->
+          <div class="alert-box alert-info" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: var(--spacing-md);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.25rem;">🚐</span>
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Protocolo de Movimentação Interna e Maqueiros</strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Transporte de pacientes monitorados requer confirmação de equipe assistente e verificação de oxigênio.</div>
+              </div>
+            </div>
+            <span class="badge-demo">Demonstrativo</span>
+          </div>
+
+          <!-- Barra de Filtros -->
+          <div class="filter-bar" style="margin-bottom: var(--spacing-md); display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1.5; min-width: 200px;">
+              <label for="filter-trp-search" class="form-label" style="margin-bottom: 2px;">Buscar Solicitação:</label>
+              <input type="text" id="filter-trp-search" class="form-control" placeholder="Buscar por ID, paciente, origem, destino...">
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-trp-status" class="form-label" style="margin-bottom: 2px;">Status:</label>
+              <select id="filter-trp-status" class="form-control">
+                <option value="ALL">Todos os Status</option>
+                <option value="AGUARDANDO_ACEITE">Aguardando Aceite</option>
+                <option value="EM_EXECUCAO">Em Execução</option>
+                <option value="CONCLUIDO">Concluído</option>
+                <option value="PENDENTE_APROVACAO">Pendente Aprovação</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+              <label for="filter-trp-type" class="form-label" style="margin-bottom: 2px;">Tipo:</label>
+              <select id="filter-trp-type" class="form-control">
+                <option value="ALL">Todos os Tipos</option>
+                <option value="Pessoa">Pessoa / Paciente</option>
+                <option value="Equipamento">Equipamento</option>
+                <option value="Material">Material</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="button" id="btn-trp-export" class="btn btn-secondary" style="padding: 8px 12px;" title="Exportar fila">📥 CSV</button>
+              <button type="button" id="btn-trp-clear" class="btn btn-ghost" style="padding: 8px 12px;" title="Limpar filtros">Limpar</button>
+            </div>
+          </div>
+
+          <!-- Tabela Operacional -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">ID</th>
+                  <th style="width: 100px;">Tipo</th>
+                  <th>Origem ➔ Destino</th>
+                  <th style="width: 130px;">Data / Hora</th>
+                  <th style="width: 100px;">Prioridade</th>
+                  <th style="width: 120px;">Status</th>
+                  <th style="width: 130px; text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="transporte-tbody">
+                <!-- Preenchido via app.js -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:0.75rem;color:var(--text-muted);">
+            <span id="transporte-footer-info">Carregando fila de transporte...</span>
+            <span>Motor Genérico Central 360 · Demonstrativo</span>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Resumo Operacional & Recursos -->
+        <div class="form-side-col">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">👥 Equipes e Recursos Internos</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Equipe Maqueiros A (Bloco A/B):</span>
+                <strong style="color: var(--success);">Em Atividade (2 rotas)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Equipe Maqueiros B (Pronto Atend.):</span>
+                <strong style="color: var(--success);">Disponível</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 6px;">
+                <span>Carrinhos Elétricos de Carga:</span>
+                <strong style="color: var(--accent);">3 em operação</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Central de Despacho Interno:</span>
+                <strong style="color: var(--text-primary);">Ramal 3030 (Simulado)</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">⏱️ SLAs de Atendimento</span>
+            </div>
+            <div class="panel-body" style="font-size: var(--font-xs); color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+              <p style="margin:0;">• <strong>Urgência / Crítico:</strong> Atendimento imediato em até 15 minutos.</p>
+              <p style="margin:0;">• <strong>Alta Prioridade:</strong> Atendimento programado em até 30 minutos.</p>
+              <p style="margin:0;">• <strong>Rotina / Normal:</strong> Despacho na janela horária de até 60 minutos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/api-client.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

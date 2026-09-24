@@ -3,51 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Serviços 360 - Administração & Auditoria</title>
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
+  <title>Central de Serviços 360 - Configurações &amp; Auditoria</title>
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/secondary-pages.css">
+  <link rel="stylesheet" href="assets/css/admin-governance.css">
 </head>
-<body data-page="administracao">
+<body data-page="administracao-secondary">
   <div id="app-layout-root">
-    <main class="page-content" id="page-content-slot">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Administração & Trilha de Auditoria (RN-SEG-003)</h1>
-          <p class="page-subtitle">Visualização de logs de auditoria, parametrizações e controle da demonstração.</p>
-        </div>
-      </div>
-
-      <!-- Caixa de Controle da Demonstração (Admin Reset) -->
-      <div style="background-color: #f8fafc; border: 1px solid var(--border); padding: 20px; border-radius: var(--radius-md); margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-        <div>
-          <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary);">Restauração e Limpeza de Dados Fictícios (Demonstração)</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted);">Esta ação apaga apenas as chaves locais <code>cs360_</code> do protótipo no navegador e restaura o dataset inicial.</p>
-        </div>
-        <button class="btn btn-danger" onclick="window.resetPrototypeData()">🔄 Restaurar Dados Fictícios da Demonstração</button>
-      </div>
-
-      <!-- Tabela de Auditoria -->
-      <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Trilha Auditável de Eventos da Sessão (AuditEvent)</h2>
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Log</th>
-              <th>Data / Hora</th>
-              <th>Usuário (Perfil)</th>
-              <th>Ação Auditada</th>
-              <th>Detalhes / Recurso</th>
-            </tr>
-          </thead>
-          <tbody id="audit-tbody">
-            <!-- Renderizado dinamicamente pelo app.js -->
-          </tbody>
-        </table>
-      </div>
+    <main class="page-content admin-page" id="page-content-slot">
+      <div id="admin-secondary-view" aria-live="polite"></div>
     </main>
   </div>
 
   <script src="assets/js/mock-data.js"></script>
   <script src="assets/js/api-client.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/secondary-pages.js"></script>
+  <script src="assets/js/admin-governance.js"></script>
 </body>
 </html>

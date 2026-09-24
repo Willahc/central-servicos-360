@@ -5,7 +5,8 @@ import helmet from 'helmet';
 import path from 'path';
 import { envConfig } from './config/env.config';
 import { errorHandler } from './middleware/errorHandler';
-import { authenticate } from './middleware/auth';
+import { authenticate, authorize } from './middleware/auth';
+import { rateLimit } from './middleware/rateLimit';
 
 // Importar rotas dos módulos
 import authRoutes from './modules/auth/auth.routes';
@@ -19,6 +20,7 @@ import xeroxRoutes from './modules/xerox/xerox.routes';
 import financeiroRoutes from './modules/financeiro/financeiro.routes';
 import fornecedoresRoutes from './modules/fornecedores/fornecedores.routes';
 import ticketsRoutes from './modules/tickets/tickets.routes';
+import adminRoutes from './modules/admin/admin.routes';
 
 const app = express();
 const PORT = envConfig.port;
@@ -61,11 +63,15 @@ const corsOptions: cors.CorsOptions = {
     callback(new Error('Não permitido pelo CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
 
+app.use('/api', (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 app.use(express.json({ limit: '100kb' }));
 
 // Servir arquivos estáticos do protótipo
@@ -98,20 +104,21 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Rotas públicas (não requerem autenticação)
+app.use('/api/auth/login', rateLimit(60_000, 30));
 app.use('/api/auth', authRoutes);
 
 // Rotas protegidas (requerem autenticação)
 app.use('/api/requests', authenticate, requestsRoutes);
-app.use('/api/dashboard', authenticate, dashboardRoutes);
+app.use('/api/dashboard', authenticate, authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), dashboardRoutes);
 app.use('/api/approvals', authenticate, aprovacoesRoutes);
 app.use('/api/viagens', authenticate, viagensRoutes);
-app.use('/api/non-flown-tickets', authenticate, viagensRoutes);
 app.use('/api/mobilidade', authenticate, mobilidadeRoutes);
 app.use('/api/correios', authenticate, correiosRoutes);
 app.use('/api/xerox', authenticate, xeroxRoutes);
 app.use('/api/finance', authenticate, financeiroRoutes);
-app.use('/api/suppliers', authenticate, fornecedoresRoutes);
-app.use('/api/tickets', authenticate, ticketsRoutes);
+app.use('/api/suppliers', authenticate, authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), fornecedoresRoutes);
+app.use('/api/tickets', authenticate, authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), ticketsRoutes);
+app.use('/api/admin', authenticate, authorize('ADMINISTRADOR'), adminRoutes);
 
 // Rota raiz: redireciona para o protótipo
 app.get('/', (req: Request, res: Response) => {

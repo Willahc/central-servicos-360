@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requestRepository } from '../../database';
 import { NotFoundError, ValidationError } from '../../common/errors/AppError';
 import { validate } from '../../middleware/validate';
-import { authorize } from '../../middleware/auth';
+import { authorize, authorizeService } from '../../middleware/auth';
 import { createMobilidadeAccessSchema, requestVoucherSchema } from '../../common/validation-schemas';
 
 const router = Router();
@@ -11,44 +11,44 @@ const router = Router();
 const mockRides = [
   {
     id: 'RID-5501',
-    passenger: 'Carlos Andrade',
+    passenger: 'Usuário Exemplo A',
     date: '2026-08-01 22:45',
-    origin: 'Unidade Paulista',
-    destination: 'Residência Fictícia',
+    origin: 'Unidade Exemplo A',
+    destination: 'Destino Demonstrativo',
     cost: 48.50,
     provider: 'Uber for Business',
-    costCenter: 'CC-3021',
+    costCenter: 'CC-DEMO-01',
     policyFlag: true,
-    flagReason: 'Corrida em horário noturno fora de viagem ativa (Requer validação no faturamento)'
+    flagReason: 'Corrida em horário noturno fora de viagem ativa (Exceção demonstrativa - requer validação no faturamento)'
   },
   {
     id: 'RID-5502',
-    passenger: 'Fernanda Lima',
+    passenger: 'Usuário Exemplo B',
     date: '2026-07-28 14:10',
-    origin: 'Unidade Paulista',
+    origin: 'Unidade Exemplo A',
     destination: 'Aeroporto de Congonhas',
     cost: 35.00,
     provider: 'Táxi Digital',
-    costCenter: 'CC-1010',
+    costCenter: 'CC-DEMO-02',
     policyFlag: false,
     flagReason: null
   },
   {
     id: 'RID-5503',
-    passenger: 'Roberto Silva',
+    passenger: 'Usuário Exemplo C',
     date: '2026-07-25 09:30',
     origin: 'Aeroporto Santos Dumont',
-    destination: 'Hotel Fictício RJ',
+    destination: 'Destino Demonstrativo',
     cost: 42.10,
     provider: 'Uber for Business',
-    costCenter: 'CC-2005',
+    costCenter: 'CC-DEMO-03',
     policyFlag: false,
     flagReason: null
   }
 ];
 
 // GET /api/mobilidade/rides - Listar corridas realizadas
-router.get('/rides', async (req: Request, res: Response) => {
+router.get('/rides', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('mobilidade'), async (req: Request, res: Response) => {
   res.json({
     success: true,
     data: mockRides,
@@ -57,7 +57,7 @@ router.get('/rides', async (req: Request, res: Response) => {
 });
 
 // GET /api/mobilidade/rides/:id - Detalhes de uma corrida
-router.get('/rides/:id', async (req: Request, res: Response) => {
+router.get('/rides/:id', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('mobilidade'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const ride = mockRides.find(r => r.id === id);
 
@@ -73,7 +73,8 @@ router.get('/rides/:id', async (req: Request, res: Response) => {
 
 // POST /api/mobilidade/access-requests - Solicitar acesso/ajuste
 router.post('/access-requests', authorize('colaborador', 'administrador'), validate(createMobilidadeAccessSchema), async (req: Request, res: Response) => {
-  const { serviceType, title, requesterId, requesterName, costCenter, details } = req.body;
+  const { serviceType, title, details } = req.body;
+  const { id: requesterId, name: requesterName, costCenter } = req.user!;
 
   const newRequest = {
     id: requestRepository.generateId('SOL'),
@@ -106,11 +107,11 @@ router.post('/access-requests', authorize('colaborador', 'administrador'), valid
 });
 
 // GET /api/mobilidade/limits - Consultar limites mensais
-router.get('/limits', async (req: Request, res: Response) => {
+router.get('/limits', authorize('AGENTE_SERVICO', 'ADMINISTRADOR'), authorizeService('mobilidade'), async (req: Request, res: Response) => {
   const limits = [
-    { userId: 'USR-001', userName: 'Carlos Andrade', monthlyLimit: 500.00, currentUsage: 48.50, remaining: 451.50 },
-    { userId: 'USR-002', userName: 'Fernanda Lima', monthlyLimit: 500.00, currentUsage: 35.00, remaining: 465.00 },
-    { userId: 'USR-007', userName: 'Roberto Silva', monthlyLimit: 500.00, currentUsage: 42.10, remaining: 457.90 }
+    { userId: 'USR-001', userName: 'Usuário Exemplo A', monthlyLimit: 500.00, currentUsage: 48.50, remaining: 451.50 },
+    { userId: 'USR-002', userName: 'Usuário Exemplo B', monthlyLimit: 500.00, currentUsage: 35.00, remaining: 465.00 },
+    { userId: 'USR-007', userName: 'Usuário Exemplo C', monthlyLimit: 500.00, currentUsage: 42.10, remaining: 457.90 }
   ];
 
   res.json({
@@ -121,7 +122,9 @@ router.get('/limits', async (req: Request, res: Response) => {
 
 // POST /api/mobilidade/voucher - Solicitar voucher
 router.post('/voucher', authorize('colaborador', 'administrador'), validate(requestVoucherSchema), async (req: Request, res: Response) => {
-  const { userEmail, costCenter, reason } = req.body;
+  const { reason } = req.body;
+  const userEmail = req.user!.email;
+  const costCenter = req.user!.costCenter;
 
   const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
   const voucher = {

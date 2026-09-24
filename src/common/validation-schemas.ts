@@ -16,15 +16,28 @@ const requestStatusEnum = z.enum([
   'EM_ATENDIMENTO', 'CONCLUIDO', 'REJEITADO', 'CANCELADO'
 ]);
 
-const serviceTypeEnum = z.enum(['viagem', 'mobilidade', 'correios', 'xerox']);
+const serviceTypeEnum = z.enum([
+  'viagem',
+  'mobilidade',
+  'transporte',
+  'estacionamento',
+  'entregas',
+  'achados_perdidos',
+  'solicitacao_imagens',
+  'investigacao_ocorrencia',
+  'autorizacao_excepcional',
+  'liberacao_acesso',
+  'correios',
+  'xerox'
+]);
 
 export const createRequestSchema = z.object({
   body: z.object({
     serviceType: serviceTypeEnum,
     title: z.string().min(1, 'Título é obrigatório').max(200),
-    requesterId: z.string().min(1, 'ID do solicitante é obrigatório'),
-    requesterName: z.string().min(1, 'Nome do solicitante é obrigatório'),
-    costCenter: z.string().min(1, 'Centro de custo é obrigatório'),
+    requesterId: z.string().min(1).optional(),
+    requesterName: z.string().min(1).optional(),
+    costCenter: z.string().min(1).optional(),
     urgent: z.boolean().optional().default(false),
     details: z.record(z.unknown()).optional().default({}),
     status: z.literal('RASCUNHO').optional().default('RASCUNHO')
@@ -55,7 +68,7 @@ export const approveRequestSchema = z.object({
     id: z.string().min(1)
   }),
   body: z.object({
-    approverName: z.string().min(1, 'Nome do aprovador é obrigatório'),
+    approverName: z.string().min(1).optional().default('Gestor Demo'),
     comment: z.string().optional()
   })
 });
@@ -65,7 +78,7 @@ export const rejectRequestSchema = z.object({
     id: z.string().min(1)
   }),
   body: z.object({
-    approverName: z.string().min(1, 'Nome do aprovador é obrigatório'),
+    approverName: z.string().min(1).optional().default('Gestor Demo'),
     reason: z.string().min(1, 'Justificativa é obrigatória para rejeição (RN-GER-005)')
   })
 });
@@ -75,9 +88,9 @@ export const createMobilidadeAccessSchema = z.object({
   body: z.object({
     serviceType: serviceTypeEnum.optional().default('mobilidade'),
     title: z.string().min(1).max(200).optional(),
-    requesterId: z.string().min(1, 'ID do solicitante é obrigatório'),
-    requesterName: z.string().min(1, 'Nome do solicitante é obrigatório'),
-    costCenter: z.string().min(1, 'Centro de custo é obrigatório'),
+    requesterId: z.string().min(1).optional(),
+    requesterName: z.string().min(1).optional(),
+    costCenter: z.string().min(1).optional(),
     details: z.record(z.unknown()).optional().default({})
   })
 });
@@ -94,9 +107,9 @@ export const requestVoucherSchema = z.object({
 export const createCorreioSchema = z.object({
   body: z.object({
     title: z.string().min(1, 'Título é obrigatório').max(200),
-    requesterId: z.string().min(1, 'ID do solicitante é obrigatório'),
-    requesterName: z.string().min(1, 'Nome do solicitante é obrigatório'),
-    costCenter: z.string().min(1, 'Centro de custo é obrigatório'),
+    requesterId: z.string().min(1).optional(),
+    requesterName: z.string().min(1).optional(),
+    costCenter: z.string().min(1).optional(),
     details: z.record(z.unknown()).optional().default({})
   })
 });
@@ -116,9 +129,9 @@ export const updateCorreioUsageTypeSchema = z.object({
 export const createXeroxJobSchema = z.object({
   body: z.object({
     title: z.string().min(1, 'Título é obrigatório').max(200),
-    requesterId: z.string().min(1, 'ID do solicitante é obrigatório'),
-    requesterName: z.string().min(1, 'Nome do solicitante é obrigatório'),
-    costCenter: z.string().min(1, 'Centro de custo é obrigatório'),
+    requesterId: z.string().min(1).optional(),
+    requesterName: z.string().min(1).optional(),
+    costCenter: z.string().min(1).optional(),
     details: z.object({
       format: z.string().optional().default('A4'),
       colorMode: z.string().optional().default('P&B'),

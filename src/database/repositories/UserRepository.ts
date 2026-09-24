@@ -4,6 +4,14 @@ export interface User extends BaseEntity {
   email: string;
   name: string;
   role: string;
+  roles?: string[];
+  serviceScopes?: string[];
+  approvalScopes?: string[];
+  accessStatus?: 'ATIVO' | 'DESATIVADO';
+  employeeId?: string;
+  jobTitle?: string;
+  manager?: string;
+  lastAccessAt?: string;
   department: string;
   costCenter: string;
 }

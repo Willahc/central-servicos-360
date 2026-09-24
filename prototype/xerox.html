@@ -3,36 +3,318 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Xerox e Impressões</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="xerox">
   <div id="app-layout-root">
-    <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+    <main class="page-content service-table-page xerox-page" id="page-content-slot">
+      <!-- Cabeçalho com Ação Alinhada -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
         <div>
-          <h1 class="page-title">Xerox e Impressões (RN-XER)</h1>
-          <p class="page-subtitle">Fila gráfica de impressão A4/A3, tiragens e acabamentos.</p>
+          <h1 class="page-title">Xerox e Impressões</h1>
+          <p class="page-subtitle">Solicitações, fila de produção e acompanhamento de serviços gráficos.</p>
         </div>
-        <div>
-          <a href="solicitacao-nova.html" class="btn btn-primary">🖨️ Solicitar Impressão Gráfica</a>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html?type=xerox" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">🖨️ Solicitar Impressão Gráfica</a>
         </div>
       </div>
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Job ID</th>
-              <th>Título do Documento</th>
-              <th>Especificações Gráficas (RN-XER-001)</th>
-              <th>Status Produção</th>
-            </tr>
-          </thead>
-          <tbody id="xerox-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
+      <!-- Faixa de 6 KPIs Compactos Derivados da Fonte Única -->
+      <div class="kpi-mini-grid grid-6-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">📄</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Solicitações no Período</span>
+            <span class="kpi-mini-val" id="kpi-xer-total">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">⚙️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Produção</span>
+            <span class="kpi-mini-val" id="kpi-xer-producao">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Aguardando Atendimento</span>
+            <span class="kpi-mini-val" id="kpi-xer-aguardando">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Concluídas / Retirada</span>
+            <span class="kpi-mini-val" id="kpi-xer-concluidas">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--danger-bg); color: var(--danger);">⚠️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Impressões Pendentes</span>
+            <span class="kpi-mini-val" id="kpi-xer-pendentes">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">📊</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Volume de Páginas</span>
+            <span class="kpi-mini-val" id="kpi-xer-volume" style="font-size: 0.95rem;">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composição Principal em 2 Colunas -->
+      <div class="form-layout-grid service-main-grid">
+        <!-- Coluna Esquerda: Gráfico de Volume, Fila de Produção e Tabela de Jobs -->
+        <div class="form-main-col service-table-column">
+          <!-- Callout Compacto RN-XER-001 -->
+          <div class="alert-box alert-info" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.25rem;">🖨️</span>
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Especificações Gráficas da Solicitação (RN-XER-001)</strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Tiragens padrão, acabamentos e formatos A4/A3 com fluxos de atendimento demonstrativos no MVP local.</div>
+              </div>
+            </div>
+            <span class="badge-demo">Demonstrativo</span>
+          </div>
+
+          <!-- Gráfico Local de Volume de Páginas Impressas -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📈 Volume de Páginas Impressas por Dia — Demonstrativo</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Últimos 7 dias (simulado)</span>
+            </div>
+            <div class="panel-body" style="padding: 16px;">
+              <div style="height: 140px; width: 100%; display: flex; align-items: flex-end; gap: 16px; padding-top: 10px; border-bottom: 1px solid var(--border-light); justify-content: space-around;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">120</span>
+                  <div style="width: 100%; max-width: 32px; height: 80px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Seg</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">150</span>
+                  <div style="width: 100%; max-width: 32px; height: 100px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Ter</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">60</span>
+                  <div style="width: 100%; max-width: 32px; height: 40px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Qua</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">50</span>
+                  <div style="width: 100%; max-width: 32px; height: 35px; background: var(--accent); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.85;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Qui</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">0</span>
+                  <div style="width: 100%; max-width: 32px; height: 6px; background: var(--border); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.5;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Sex</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">0</span>
+                  <div style="width: 100%; max-width: 32px; height: 6px; background: var(--border); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.5;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Sáb</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">0</span>
+                  <div style="width: 100%; max-width: 32px; height: 6px; background: var(--border); border-radius: var(--radius-xs) var(--radius-xs) 0 0; opacity: 0.5;"></div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Dom</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila de Produção Ativa -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">⚙️ Fila de Produção Gráfica</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);" id="xerox-queue-counter">Acompanhamento operacional</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px;" id="xerox-active-cards">
+              <!-- Renderizado pelo app.js -->
+            </div>
+          </div>
+
+          <!-- Tabela de Jobs Recentes -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📋 Histórico de Jobs e Solicitações</span>
+              <a href="solicitacao-nova.html" class="panel-action">Nova Solicitação</a>
+            </div>
+            <div class="panel-body service-table-panel-body" style="padding: 0;">
+              <div class="service-table-scroll">
+              <table class="data-table xerox-main-table">
+                <thead>
+                  <tr>
+                    <th style="width: 120px;">Job ID</th>
+                    <th>Documento Demonstrativo</th>
+                    <th style="width: 90px;">Formato</th>
+                    <th style="width: 120px;">Tipo</th>
+                    <th style="width: 100px;">Cópias</th>
+                    <th style="width: 150px;">Acabamento</th>
+                    <th style="width: 130px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="xerox-tbody">
+                  <!-- Renderizado pelo app.js -->
+                </tbody>
+              </table>
+              </div>
+              <div style="padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
+                <span id="xerox-table-footer">Exibindo todos os jobs gráficos registrados (simulados para validação)</span>
+                <span>Página 1 de 1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Painel Lateral Operacional -->
+        <div class="form-side-col service-side-panel">
+          <!-- Formatos Utilizados -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📐 Formatos Utilizados</span>
+              <span class="badge-demo">Simulado</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Formato A4 (Padrão)</span>
+                  <strong style="color: var(--text-primary);">3 jobs (75,0%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 75%; background: var(--accent);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: var(--font-xs); margin-bottom: 4px;">
+                  <span style="color: var(--text-secondary);">Formato A3 (Ampliado)</span>
+                  <strong style="color: var(--text-primary);">1 job (25,0%)</strong>
+                </div>
+                <div style="height: 6px; background: var(--surface-muted); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; width: 25%; background: var(--info);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipo de Impressão -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🎨 Tipo de Impressão</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Distribuição</span>
+            </div>
+            <div class="panel-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--accent);">●</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">Colorido</span>
+                </div>
+                <strong style="color: var(--text-primary);">2 jobs (50%)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--text-muted);">●</span>
+                  <span style="color: var(--text-primary); font-weight: 600;">Preto e Branco</span>
+                </div>
+                <strong style="color: var(--text-primary);">2 jobs (50%)</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acabamentos -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">✂️ Acabamentos</span>
+              <span class="badge-demo">Demonstrativo</span>
+            </div>
+            <div class="panel-body" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Espiral / Encadernação:</span>
+                <span class="status-badge status-APROVADO" style="font-size: 0.65rem;">1 job</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Plastificação:</span>
+                <span class="status-badge status-APROVADO" style="font-size: 0.65rem;">1 job</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Grampeado / Simples:</span>
+                <span class="status-badge status-APROVADO" style="font-size: 0.65rem;">1 job</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Sem Acabamento:</span>
+                <span class="status-badge status-APROVADO" style="font-size: 0.65rem;">1 job</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status de Produção -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📦 Status de Produção</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Total: 4</span>
+            </div>
+            <div class="panel-body" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: var(--font-xs);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Em Produção:</span>
+                <span class="status-badge status-EM_ATENDIMENTO" style="font-size: 0.65rem;">2 jobs</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Aguardando Atendimento:</span>
+                <span class="status-badge status-PENDENTE_APROVACAO" style="font-size: 0.65rem;">1 job</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary);">Concluído / Retirada:</span>
+                <span class="status-badge status-CONCLUIDO" style="font-size: 0.65rem;">1 job</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas e Pendências -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔔 Alertas e Pendências</span>
+              <span style="background: var(--danger); color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: var(--radius-full); font-weight: 700;">2</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⚠️</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Arquivo Aguardando Envio</div>
+                  <div style="color: var(--text-secondary);">JOB-DEMO-004 aguarda upload do arquivo PDF definitivo.</div>
+                  <span class="status-badge status-REJEITADO" style="font-size: 0.6rem; margin-top: 4px;">Atenção</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⏳</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Impressão em Andamento</div>
+                  <div style="color: var(--text-secondary);">JOB-DEMO-001 alocado na impressora multifuncional.</div>
+                  <span class="status-badge status-EM_ATENDIMENTO" style="font-size: 0.6rem; margin-top: 4px;">Em Produção</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>

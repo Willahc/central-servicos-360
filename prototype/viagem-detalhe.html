@@ -3,43 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Detalhes do Itinerário de Viagem</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="viagem-detalhe">
   <div id="app-layout-root">
     <main class="page-content" id="page-content-slot">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Itinerário de Viagem Corporativa</h1>
-          <p class="page-subtitle">Visualização de passagens, hospedagem e apólice de seguro viagem.</p>
+      <!-- Breadcrumb & Ações Superiores -->
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
+          <a href="dashboard.html" style="color: var(--accent); text-decoration: none;">Dashboard</a>
+          <span>/</span>
+          <a href="viagens.html" style="color: var(--accent); text-decoration: none;">Viagens Corporativas</a>
+          <span>/</span>
+          <span style="color: var(--text-primary); font-weight: 600;" id="viagem-breadcrumb-id">Viagem</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <a href="viagens.html" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">⬅️ Voltar para Viagens</a>
+          <a href="solicitacao-nova.html?type=viagens" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">✈️ Nova Solicitação</a>
         </div>
       </div>
 
-      <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); max-width: 800px;">
-        <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 16px;">Detalhes do Trecho & Reserva</h2>
+      <!-- Cabeçalho Principal -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+            <h1 class="page-title" style="margin: 0;">Itinerário de Viagem <span id="viagem-det-id">-</span></h1>
+            <span class="status-badge" id="viagem-det-status">EM ATENDIMENTO</span>
+          </div>
+          <p class="page-subtitle" id="viagem-det-title">Visualização de bilhetes aéreos, vouchers de hospedagem e seguro viagem.</p>
+        </div>
+        <div id="viagem-actions-bar" style="display: flex; gap: 10px; align-items: center;">
+          <a href="solicitacoes.html" id="viagem-link-solicitacao" class="btn btn-secondary btn-sm">📄 Ver Solicitação Completa</a>
+        </div>
+      </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
-          <div style="background: #f8fafc; padding: 12px; border-radius: 6px;">
-            <strong>Origem / Destino:</strong>
-            <p>São Paulo (GRU) ➔ Brasília (BSB)</p>
+      <!-- Grid Principal -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+        <!-- Coluna Esquerda: Detalhes do Trecho, Voo, Hotel e Seguro -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <!-- Card de Trecho e Passagem -->
+          <div class="panel">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="panel-title">✈️ Trecho Aéreo & Bilhete Eletrônico</span>
+              <span class="badge-demo" id="viagem-det-pnr">Localizador: ARGO-8921-X</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; background: var(--surface-muted); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Origem / Destino</span>
+                  <strong style="font-size: 1rem; color: var(--text-primary);" id="viagem-det-origin-dest">São Paulo (GRU) ➔ Brasília (BSB)</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Período da Viagem</span>
+                  <strong style="font-size: 0.95rem; color: var(--text-primary);" id="viagem-det-dates">15/09/2026 a 18/09/2026</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Companhia Aérea / Voo</span>
+                  <strong style="font-size: 0.95rem; color: var(--accent);" id="viagem-det-airline">LATAM (LA-3401)</strong>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 0.85rem;">
+                <div>
+                  <span style="color: var(--text-muted);">Passageiro:</span>
+                  <strong style="display: block; color: var(--text-primary);" id="viagem-det-passenger">Carlos Andrade</strong>
+                </div>
+                <div>
+                  <span style="color: var(--text-muted);">Centro de Custo:</span>
+                  <strong style="display: block; color: var(--text-primary);" id="viagem-det-cc">CC-3021</strong>
+                </div>
+                <div>
+                  <span style="color: var(--text-muted);">Tarifa Aplicada:</span>
+                  <strong style="display: block; color: var(--success);" id="viagem-det-fare">Menor Tarifa Disponível (RN-VIA-001)</strong>
+                </div>
+              </div>
+            </div>
           </div>
-          <div style="background: #f8fafc; padding: 12px; border-radius: 6px;">
-            <strong>Período:</strong>
-            <p>15/09/2026 a 18/09/2026</p>
+
+          <!-- Hospedagem -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🏨 Reserva de Hospedagem</span>
+            </div>
+            <div class="panel-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.85rem;">
+              <div style="background: var(--surface-muted); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;" id="viagem-det-hotel-name">Hotel Windsor Plaza Brasília</div>
+                <div style="color: var(--text-secondary); margin-bottom: 6px;" id="viagem-det-hotel-nights">3 diárias · Quarto Standard Individual</div>
+                <span class="status-badge status-APROVADO" style="font-size: 0.7rem;">Voucher Confirmado</span>
+              </div>
+              <div style="background: var(--surface-muted); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Regras de Hospedagem</div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">Café da manhã incluso. Despesas extras / frigobar sob responsabilidade direta do colaborador no check-out.</div>
+              </div>
+            </div>
           </div>
-          <div style="background: #f8fafc; padding: 12px; border-radius: 6px;">
-            <strong>Seguro Viagem (RN-VIA-003):</strong>
-            <p style="color: green; font-weight: 600;">✓ Apólice Simulado Emitido</p>
+
+          <!-- Seguro Viagem (RN-VIA-003) -->
+          <div class="panel">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="panel-title">🛡️ Seguro Viagem Corporativo (RN-VIA-003)</span>
+              <span class="status-badge status-APROVADO" style="font-size: 0.75rem;">Apólice Ativa</span>
+            </div>
+            <div class="panel-body" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+              <div>
+                <strong style="color: var(--text-primary); font-size: 0.9rem;">Cobertura Médica Hospitalar & Extravio de Bagagem</strong>
+                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 4px;" id="viagem-det-insurance">Apólice nº POL-2026-HSL-0921 · Emissão automática vinculada ao trecho aéreo.</div>
+              </div>
+              <span style="font-size: 1.8rem; color: var(--success);">✓</span>
+            </div>
           </div>
         </div>
 
-        <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin-bottom: 20px;">
-          <strong style="color: #b45309;">Aviso de MOCK (Argo / Copastur):</strong>
-          <p style="font-size: 0.85rem; color: #92400e;">Emissão realizada via adaptador simulado. Nenhuma chamada de API em produção efetuada.</p>
-        </div>
+        <!-- Coluna Direita: Informações de Integração & Atalhos -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <!-- Aviso MOCK -->
+          <div class="panel" style="border-left: 4px solid var(--warning);">
+            <div class="panel-header">
+              <span class="panel-title" style="color: var(--warning);">⚠️ Adaptador Simulado (Mock)</span>
+            </div>
+            <div class="panel-body" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
+              <p style="margin: 0 0 8px 0;">Este itinerário é alimentado pelo adaptador simulado da <strong>Argo / Copastur</strong> (RN-INT-004).</p>
+              <p style="margin: 0;">Nenhuma chamada de emissão real foi realizada em sistemas externos.</p>
+            </div>
+          </div>
 
-        <a href="viagens.html" class="btn btn-secondary">⬅️ Voltar para Viagens</a>
+          <!-- Contatos de Suporte de Viagem -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📞 Suporte Operacional</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: 0.8rem;">
+              <div>
+                <strong style="display: block; color: var(--text-primary);">Plantão de Viagens HSL:</strong>
+                <span style="color: var(--text-secondary);">(11) 3394-0000 · Ramal 8820</span>
+              </div>
+              <div>
+                <strong style="display: block; color: var(--text-primary);">Agência Copastur (Simulado):</strong>
+                <span style="color: var(--text-secondary);">suporte.viagens@copastur-demo.com</span>
+              </div>
+              <a href="conhecimento.html" class="btn btn-secondary btn-sm" style="margin-top: 6px; text-align: center;">Tirar dúvidas no Chatbot</a>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>

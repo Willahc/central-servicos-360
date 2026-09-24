@@ -3,65 +3,211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Viagens Corporativas</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="viagens">
   <div id="app-layout-root">
     <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+      <!-- Cabeçalho com Ação Alinhada -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: var(--spacing-lg);">
         <div>
-          <h1 class="page-title">Viagens Corporativas (RN-VIA)</h1>
-          <p class="page-subtitle">Gestão de solicitações de voos, hotéis, seguro viagem e bilhetes não voados.</p>
+          <h1 class="page-title">Viagens Corporativas</h1>
+          <p class="page-subtitle">Solicitações, itinerários, créditos aéreos e acompanhamento de viagens.</p>
         </div>
-        <div>
-          <a href="solicitacao-nova.html" class="btn btn-primary">✈️ Nova Solicitação de Viagem</a>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">✈️ Nova Solicitação de Viagem</a>
         </div>
       </div>
 
-      <!-- Alerta de Bilhetes Não Voados (RN-VIA-002) -->
-      <div style="background-color: #e0f2fe; border-left: 4px solid #0284c7; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 24px;">
-        <h3 style="font-size: 0.95rem; font-weight: 700; color: #0369a1; margin-bottom: 4px;">🎫 Painel de Bilhetes Não Voados & Créditos Aéreos (RN-VIA-002)</h3>
-        <p style="font-size: 0.85rem; color: #0c4a6e;">Antes de efetuar uma nova compra, verifique o saldo de créditos de passagens canceladas reutilizáveis para evitar custos extras.</p>
+      <!-- Faixa de 6 KPIs Compactos Derivados da Fonte Única -->
+      <div class="kpi-mini-grid grid-6-kpis">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">✈️</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Em Andamento</span>
+            <span class="kpi-mini-val" id="kpi-viagens-andamento">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📅</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Próximas Viagens</span>
+            <span class="kpi-mini-val" id="kpi-viagens-proximas">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Pendentes Aprovação</span>
+            <span class="kpi-mini-val" id="kpi-viagens-pendentes">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">🎫</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Bilhetes Não Voados</span>
+            <span class="kpi-mini-val" id="kpi-bilhetes-qtd">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--surface-muted); color: var(--text-primary);">💰</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Créditos Disponíveis</span>
+            <span class="kpi-mini-val" id="kpi-creditos-valor" style="font-size: 0.95rem;">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--danger-bg); color: var(--danger);">🔔</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Alertas Operacionais</span>
+            <span class="kpi-mini-val" id="kpi-viagens-alertas">-</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Tabela de Créditos Disponíveis -->
-      <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Créditos de Passagens / Bilhetes Não Voados</h2>
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Crédito</th>
-              <th>Passageiro Fictício</th>
-              <th>Cia Aérea / Trecho Original</th>
-              <th>Saldo Disponível</th>
-              <th>Validade</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="non-flown-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
-      </div>
+      <!-- Composição Principal em 2 Colunas -->
+      <div class="form-layout-grid">
+        <!-- Coluna Esquerda: Itinerários Ativos, Tabela de Solicitações e Callout RN-VIA-002 -->
+        <div class="form-main-col">
+          <!-- Callout Compacto RN-VIA-002 -->
+          <div class="alert-box alert-info" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin-bottom: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.25rem;">🎫</span>
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">Consulta de Créditos Reutilizáveis (RN-VIA-002)</strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Antes de uma nova emissão, consulte os créditos disponíveis de passagens canceladas para otimização de custos.</div>
+              </div>
+            </div>
+            <span class="badge-demo">Demonstrativo</span>
+          </div>
 
-      <!-- Tabela de Viagens -->
-      <h2 style="font-size: 1.1rem; font-weight: 700; margin-top: 24px; margin-bottom: 12px;">Solicitações de Viagem Registradas</h2>
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Título da Viagem</th>
-              <th>Itinerário Solicitado</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="viagens-tbody">
-            <!-- Renderizado pelo app.js -->
-          </tbody>
-        </table>
+          <!-- Próximas Viagens & Viagens Ativas -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🛫 Próximas Viagens e Viagens em Andamento</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);" id="viagens-cards-counter">Acompanhamento operacional</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px;" id="viagens-active-cards">
+              <!-- Renderizado dinamicamente pelo app.js -->
+            </div>
+          </div>
+
+          <!-- Tabela de Solicitações de Viagem -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📋 Solicitações de Viagem Registradas</span>
+              <a href="solicitacao-nova.html" class="panel-action">Nova Solicitação</a>
+            </div>
+            <div class="panel-body responsive-table-wrap" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 130px;">ID</th>
+                    <th style="width: 160px;">Viajante / Solicitante</th>
+                    <th>Destino / Itinerário</th>
+                    <th style="width: 140px;">Centro de Custo</th>
+                    <th style="width: 150px;">Status</th>
+                    <th style="width: 120px; text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="viagens-tbody">
+                  <!-- Renderizado pelo app.js -->
+                </tbody>
+              </table>
+              <div style="padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
+                <span id="viagens-table-footer">Exibindo todas as solicitações de viagem (simuladas para validação)</span>
+                <span>Página 1 de 1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Painel Lateral Operacional -->
+        <div class="form-side-col">
+          <!-- Bilhetes Não Voados & Créditos -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🎫 Bilhetes Não Voados & Créditos</span>
+              <span class="badge-demo" title="Valores simulados para demonstração">Simulado</span>
+            </div>
+            <div class="panel-body" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Saldo Total Reutilizável:</span>
+                <strong style="font-size: 0.95rem; color: var(--success);" id="credits-total-balance">R$ 1.070,00 sim.</strong>
+              </div>
+              <div id="non-flown-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Renderizado pelo app.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas Operacionais de Viagens -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🔔 Alertas Operacionais</span>
+              <span style="background: var(--danger); color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: var(--radius-full); font-weight: 700;">2</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-xs);">
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⚠️</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Crédito Vencendo em 60 dias</div>
+                  <div style="color: var(--text-secondary);">TKT-88112 (GOL, R$ 620,00 sim.) expira em 15/10/2026.</div>
+                  <span class="status-badge status-PENDENTE_APROVACAO" style="font-size: 0.6rem; margin-top: 4px;">Atenção</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">⏳</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Aprovação de Viagem Pendente</div>
+                  <div style="color: var(--text-secondary);">SOL-2026-001 aguarda validação do gestor responsável.</div>
+                  <span class="status-badge status-EM_ATENDIMENTO" style="font-size: 0.6rem; margin-top: 4px;">Pendente</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; padding: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <span style="font-size: 1.1rem;">ℹ️</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Voucher de Hospedagem Emitido</div>
+                  <div style="color: var(--text-secondary);">Reserva confirmada em Brasília para 20/09/2026.</div>
+                  <span class="status-badge status-APROVADO" style="font-size: 0.6rem; margin-top: 4px;">Informativo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Atalhos Rápidos de Viagens -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">⚡ Atalhos Rápidos</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 8px;">
+              <a href="solicitacao-nova.html" class="btn btn-secondary btn-sm" style="display: flex; justify-content: flex-start; gap: 8px; font-size: 0.8rem;">
+                <span>➕</span> Nova Solicitação de Viagem
+              </a>
+              <a href="aprovacoes.html" class="btn btn-secondary btn-sm" style="display: flex; justify-content: flex-start; gap: 8px; font-size: 0.8rem;">
+                <span>👍</span> Fila de Aprovações
+              </a>
+              <a href="solicitacoes.html" class="btn btn-secondary btn-sm" style="display: flex; justify-content: flex-start; gap: 8px; font-size: 0.8rem;">
+                <span>📑</span> Histórico Geral de Pedidos
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>

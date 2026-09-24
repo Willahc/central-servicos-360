@@ -3,56 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem("cs360_theme");
+        var theme = savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        root.classList.add("cs360-booting");
+        root.dataset.theme = theme;
+        root.dataset.sidebarCollapsed = localStorage.getItem("cs360_sidebar_collapsed") === "true" ? "true" : "false";
+      } catch (_) {}
+    })();
+  </script>
   <title>Central de Serviços 360 - Minhas Solicitações</title>
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body data-page="solicitacoes">
   <div id="app-layout-root">
     <main class="page-content" id="page-content-slot">
-      <div class="page-header">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
         <div>
           <h1 class="page-title">Minhas Solicitações</h1>
-          <p class="page-subtitle">Acompanhe o histórico e o status de todos os seus pedidos de serviço.</p>
+          <p class="page-subtitle">Acompanhe o histórico e o status de todos os seus pedidos de serviço integrados.</p>
         </div>
-        <div>
-          <a href="solicitacao-nova.html" class="btn btn-primary">➕ Abrir Novo Pedido</a>
+        <div style="flex-shrink: 0;">
+          <a href="solicitacao-nova.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">➕ Abrir Novo Pedido</a>
         </div>
       </div>
 
-      <!-- Mini KPIs Compactos Demonstrativos -->
-      <div class="kpi-mini-grid">
+      <!-- Mini KPIs Compactos Derivados Exclusivamente do Dataset -->
+      <div class="kpi-mini-grid grid-5-kpis">
         <div class="kpi-mini-card">
           <div class="kpi-mini-icon" style="background: var(--accent-light); color: var(--accent);">📑</div>
           <div class="kpi-mini-info">
             <span class="kpi-mini-label">Total de Pedidos</span>
-            <span class="kpi-mini-val" id="kpi-total-pedidos">4</span>
+            <span class="kpi-mini-val" id="kpi-total-pedidos">-</span>
           </div>
         </div>
         <div class="kpi-mini-card">
           <div class="kpi-mini-icon" style="background: var(--warning-bg); color: var(--warning);">⏳</div>
           <div class="kpi-mini-info">
             <span class="kpi-mini-label">Pendentes</span>
-            <span class="kpi-mini-val" id="kpi-pendentes-pedidos">1</span>
+            <span class="kpi-mini-val" id="kpi-pendentes-pedidos">-</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">👍</div>
+          <div class="kpi-mini-info">
+            <span class="kpi-mini-label">Aprovados</span>
+            <span class="kpi-mini-val" id="kpi-aprovados-pedidos">-</span>
           </div>
         </div>
         <div class="kpi-mini-card">
           <div class="kpi-mini-icon" style="background: var(--info-bg); color: var(--info);">⚙️</div>
           <div class="kpi-mini-info">
             <span class="kpi-mini-label">Em Atendimento</span>
-            <span class="kpi-mini-val" id="kpi-atendimento-pedidos">1</span>
+            <span class="kpi-mini-val" id="kpi-atendimento-pedidos">-</span>
           </div>
         </div>
         <div class="kpi-mini-card">
           <div class="kpi-mini-icon" style="background: var(--success-bg); color: var(--success);">✅</div>
           <div class="kpi-mini-info">
             <span class="kpi-mini-label">Concluídos</span>
-            <span class="kpi-mini-val" id="kpi-concluidos-pedidos">1</span>
+            <span class="kpi-mini-val" id="kpi-concluidos-pedidos">-</span>
           </div>
         </div>
       </div>
 
-      <!-- Barra de Filtros Compactos -->
-      <div class="filter-bar" style="margin-bottom: var(--spacing-lg);">
+      <!-- Barra de Filtros Compactos e Ações -->
+      <div class="filter-bar" style="margin-bottom: var(--spacing-lg); display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 1.5; min-width: 220px;">
+          <label for="filter-search" class="form-label" style="margin-bottom: 2px;">Buscar Solicitação:</label>
+          <input type="text" id="filter-search" class="form-control" placeholder="Buscar por ID, título, centro de custo...">
+        </div>
+
         <div style="flex: 1; min-width: 180px;">
           <label for="filter-status" class="form-label" style="margin-bottom: 2px;">Filtrar por Status:</label>
           <select id="filter-status" class="form-control">
@@ -66,15 +92,38 @@
           </select>
         </div>
 
-        <div style="flex: 1; min-width: 180px;">
+        <div style="flex: 1; min-width: 200px;">
           <label for="filter-type" class="form-label" style="margin-bottom: 2px;">Filtrar por Serviço:</label>
           <select id="filter-type" class="form-control">
-            <option value="ALL">Todas as Frentes</option>
-            <option value="viagem">Viagens Corporativas</option>
-            <option value="mobilidade">Mobilidade Urbana</option>
-            <option value="correios">Correios e Envios</option>
-            <option value="xerox">Xerox e Impressões</option>
+            <option value="ALL">Todas as 11 Frentes</option>
+            <optgroup label="Deslocamentos">
+              <option value="viagem">✈️ Viagens Corporativas</option>
+              <option value="mobilidade">🚗 Mobilidade Urbana</option>
+              <option value="transporte">🚐 Transporte Interno</option>
+              <option value="estacionamento">🅿️ Estacionamento</option>
+            </optgroup>
+            <optgroup label="Logística e Apoio">
+              <option value="entregas">📦 Entregas Internas</option>
+              <option value="correios">✉️ Correios e Envios</option>
+              <option value="xerox">🖨️ Xerox / Impressões</option>
+            </optgroup>
+            <optgroup label="Serviços Institucionais">
+              <option value="achados_perdidos">🔍 Achados e Perdidos</option>
+              <option value="investigacao_ocorrencia">📋 Investigação de Ocorrência</option>
+              <option value="autorizacao_excepcional">🛡️ Autorizações Excepcionais</option>
+              <option value="liberacao_acesso">🔑 Acessos & Credenciais</option>
+              <option value="solicitacao_imagens">📷 Solicitação de Imagens (Hipótese)</option>
+            </optgroup>
           </select>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btn-export-csv" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;" title="Exportar solicitações em formato CSV">
+            📥 Exportar CSV
+          </button>
+          <button type="button" id="btn-clear-filters" class="btn btn-ghost" style="padding: 8px 12px;" title="Limpar todos os filtros">
+            Limpar
+          </button>
         </div>
       </div>
 
@@ -95,8 +144,8 @@
             <!-- Renderizado dinamicamente pelo app.js -->
           </tbody>
         </table>
-        <div style="padding: 10px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
-          <span>Exibindo solicitações simuladas para validação</span>
+        <div style="padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: var(--font-xs); color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
+          <span id="requests-footer-info">Exibindo solicitações simuladas para validação</span>
           <span>Página 1 de 1</span>
         </div>
       </div>
